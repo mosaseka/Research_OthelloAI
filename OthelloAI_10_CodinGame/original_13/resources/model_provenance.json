@@ -1,0 +1,22 @@
+{
+  "engine": "original_13",
+  "candidate": "value_13b_width48_bce_candidate_001.txt",
+  "parameter_count": 142812,
+  "parameter_sha256": "B1DE15DEB14CAD293F916B2AF4EE177D631F0D5EAE0664E3E8986ED81ACFAD7B",
+  "feature_schema": "exact-mobility-v1",
+  "architecture": "pattern-mlp-48x48-add8x8-v1",
+  "loss": "bce",
+  "draw_target": 0.5,
+  "completed_epochs": 3,
+  "best_validation_bce": 0.24720051749204647,
+  "test_bce": 0.2473059426657928,
+  "test_outcome_brier": 0.06951467593241244,
+  "runtime_transform": "tanh(logit / 2)",
+  "java_python_parity": {
+    "positions": 4096,
+    "seed": 20260724,
+    "integer_mismatches": 0,
+    "feature_mismatches": 0,
+    "max_transformed_raw_abs_error": 1.11e-16
+  }
+}

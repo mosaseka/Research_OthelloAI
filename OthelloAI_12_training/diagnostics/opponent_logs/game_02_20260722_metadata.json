@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "game_id": "opponent_game_02_20260722",
+  "source_file": "game_02_20260722_raw.txt",
+  "engine": "original_10",
+  "engine_colour": "black",
+  "final_discs": {
+    "engine": 28,
+    "opponent": 36
+  },
+  "final_disc_difference_engine": -8,
+  "sample_size_warning": "This is one of five observed direct games and cannot establish playing strength.",
+  "usage": "diagnostic_only",
+  "training_eligible": false,
+  "adoption_gate_eligible": false,
+  "allowed_uses": [
+    "original_10_vs_original_11_position_evaluation",
+    "deep_search_agreement",
+    "candidate_move_ranking",
+    "regression_diagnosis"
+  ],
+  "forbidden_uses": [
+    "training",
+    "fine_tuning",
+    "candidate_adoption_by_itself",
+    "opponent_specific_optimization"
+  ]
+}

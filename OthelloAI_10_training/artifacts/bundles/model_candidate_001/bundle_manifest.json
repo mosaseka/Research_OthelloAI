@@ -1,0 +1,16 @@
+{
+  "format": "othello-model-bundle-v1",
+  "feature_schema": "exact-mobility-v1",
+  "value": {
+    "source": "C:\\Code\\OthelloAI_10_training\\artifacts\\value_candidate_001.txt",
+    "file": "param.txt",
+    "sha256": "FF16C4D3D697B1F838985091648CE4ACD63E708F14A1A9F693E19AFFFC6AB6B1",
+    "parameters": 25436
+  },
+  "policy": {
+    "source": "C:\\Code\\OthelloAI_10_training\\artifacts\\policy_candidate_001.txt",
+    "file": "policy.txt",
+    "sha256": "58A2D15BA70BF34A3124AE1D23A75FF57D09384FB2E3082D4FEFFD682D0E321C",
+    "parameters": 25436
+  }
+}

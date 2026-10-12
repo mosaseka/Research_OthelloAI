@@ -1,0 +1,14 @@
+{
+  "schema": "original_11_dry_run_positions_v1",
+  "training_eligible": false,
+  "positions": [
+    {"player": 0, "target": 0, "rows": ["........", "........", "........", "...XO...", "...OX...", "........", "........", "........"]},
+    {"player": 1, "target": -2, "rows": ["........", "........", "....X...", "...XX...", "...OX...", "........", "........", "........"]},
+    {"player": 0, "target": 1, "rows": ["........", "........", "....X...", "...XX...", "...OOO..", "........", "........", "........"]},
+    {"player": 1, "target": -1, "rows": ["........", "........", "....X...", "...XX...", "..XOOO..", "..X.....", "........", "........"]},
+    {"player": 0, "target": 3, "rows": ["........", "........", "...OX...", "...XX...", "..OXXO..", "..XXX...", "........", "........"]},
+    {"player": 1, "target": -3, "rows": ["........", "...X....", "..OXX...", "..OOX...", ".XXXXO..", ".XXXOO..", "..OO....", "..O....."]},
+    {"player": 0, "target": 5, "rows": ["....OOO.", "...OXO..", "XXXXOXXX", "OXXOOOXO", "OXOOOXO.", "OXOXXOOO", ".OXXXO..", "OXXXX.O."]},
+    {"player": 1, "target": -5, "rows": ["XOOOOOOX", ".XXXXOOX", "XXXOOOOX", "OXXOOOXX", "OXOOOOXX", "OOOXXOOX", "OOOOOOOX", "OXXXXXXX"]}
+  ]
+}

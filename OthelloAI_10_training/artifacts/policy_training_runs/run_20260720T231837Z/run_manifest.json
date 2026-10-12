@@ -1,0 +1,9 @@
+{
+  "configured_epochs": 3,
+  "device": "cuda",
+  "feature_schema": "exact-mobility-v1",
+  "parameter_init": "C:\\Code\\OthelloAI_10_training\\artifacts\\value_candidate_001.txt",
+  "resume_checkpoint": null,
+  "start_epoch": 0,
+  "training_contract_sha256": "cc1c874a9d44a125a6189be4daa5ab3822b87e58fd3066da3c591f7059dbc3a2"
+}

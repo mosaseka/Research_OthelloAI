@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "game_id": "opponent_game_05_20260722",
+  "source_file": "game_05_20260722_raw.txt",
+  "engine": "original_10",
+  "engine_colour": "black",
+  "final_discs": {
+    "engine": 28,
+    "opponent": 36
+  },
+  "final_disc_difference_engine": -8,
+  "observed_focus": {
+    "stones_before_first_engine_move": 42,
+    "evaluation_before_first_engine_move": 0.22,
+    "search_seconds_before_first_engine_move": 2.8,
+    "first_engine_move": [7, 6],
+    "stones_before_next_engine_move": 44,
+    "evaluation_before_next_engine_move": -8.0,
+    "search_seconds_before_next_engine_move": 0.0,
+    "next_engine_move": [7, 1],
+    "suspected_mode_transition": "book hit before finalSearch",
+    "questions": [
+      "book_hit_at_44_stones",
+      "book_candidate_count_and_selected_move",
+      "book_move_rank_under_deep_search",
+      "book_limit_64_vs_20_vs_disabled",
+      "whether_later_zero_second_moves_are_book_hits"
+    ]
+  },
+  "sample_size_warning": "The five observed direct losses do not establish strength or justify opponent-specific fitting.",
+  "usage": "diagnostic_only",
+  "training_eligible": false,
+  "adoption_gate_eligible": false,
+  "allowed_uses": [
+    "book_hit_diagnosis",
+    "book_limit_ab_hypothesis",
+    "book_move_vs_search_move_comparison",
+    "original_10_vs_original_11_position_evaluation",
+    "regression_diagnosis"
+  ],
+  "forbidden_uses": [
+    "training",
+    "fine_tuning",
+    "candidate_adoption_by_itself",
+    "opponent_specific_optimization"
+  ]
+}

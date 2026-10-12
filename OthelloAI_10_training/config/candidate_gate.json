@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "feature_schema": "exact-mobility-v1",
+  "baseline_feature_schema": "legacy-v1",
+  "ai_source": "C:/Users/mosas/Box/01_授業関連/3-1/計算機科学応用演習/2026_1/0_課題/2026_07_15_ネットワークプログラミング/original_10/OthelloAI_10.java",
+  "baseline": "C:/Users/mosas/Box/01_授業関連/3-1/計算機科学応用演習/2026_1/0_課題/2026_07_15_ネットワークプログラミング/original_10/resources/param.txt",
+  "java_python_parity": {
+    "positions": 4096,
+    "seed": 20260720,
+    "tolerance": 1e-12,
+    "timeout_seconds": 900
+  },
+  "heldout": {
+    "prepared_manifest": "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2/conversion_manifest.json",
+    "split": "test",
+    "sample_seed": 20260720,
+    "samples_per_phase": 4096,
+    "progress_every_records": 250000
+  },
+  "rmse_gate": {
+    "minimum_relative": 0.01,
+    "minimum_absolute_disc": 0.1,
+    "endgame_phase": 3,
+    "endgame_tolerance_disc": 0.0
+  },
+  "d4_direction_check": {
+    "samples_per_phase": 128,
+    "maximum_candidate_span_disc": null,
+    "maximum_candidate_mean_span_disc": null,
+    "require_nonworsening": false,
+    "nonworsening_tolerance_disc": 0.0
+  }
+}

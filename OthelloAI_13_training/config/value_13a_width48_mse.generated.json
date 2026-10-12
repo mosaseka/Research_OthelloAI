@@ -1,0 +1,136 @@
+{
+  "best_model_metric": "validation_rmse",
+  "candidate_name": "value_13a_width48_mse",
+  "checkpoint_resume_from": null,
+  "data": {
+    "clip_targets": true,
+    "d4_augmentation": true,
+    "epoch_sampling": {
+      "mode": "full_pass",
+      "required_phases": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "eval_color_augmentation": "both",
+    "external_prepared_root": "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2",
+    "max_source_records": {
+      "test": 0,
+      "train": 0,
+      "val": 0
+    },
+    "paths_by_split": {
+      "test": [
+        "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2/test/**/*.txt"
+      ],
+      "train": [
+        "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2/train/**/*.txt"
+      ],
+      "val": [
+        "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2/val/**/*.txt"
+      ]
+    },
+    "prepared_manifest": "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2/conversion_manifest.json",
+    "shuffle_buffer": 8192,
+    "split": {
+      "ratios": {
+        "test": 0.05,
+        "train": 0.9,
+        "val": 0.05
+      },
+      "seed": 20260715
+    },
+    "strict": true,
+    "target_scale": 64.0,
+    "train_color_augmentation": "random"
+  },
+  "dataset_kind": "egaroucid_v0002_games",
+  "datasets": {
+    "heldout": "egaroucid_v2/test, never optimized",
+    "train": "egaroucid_v2/train, verified full-pass",
+    "validation": "egaroucid_v2/val, verified full-pass"
+  },
+  "experiment": {
+    "description": "Function-preserving, zero-sum symmetry-broken 16-to-48 widening followed by MSE training.",
+    "variant": "value_13a_width48_mse"
+  },
+  "feature_schema": "exact-mobility-v1",
+  "manifest_output_path": "export_manifest.json",
+  "model": {
+    "dtype": "float32",
+    "parameter_format": "othello-pattern-mlp-width48-v1",
+    "pattern_hidden_width": 48,
+    "runtime_transform": "clamp-minus1-plus1"
+  },
+  "output": {
+    "candidate_path": "artifacts/value_13a_width48_mse_candidate_001.txt",
+    "runs_dir": "artifacts/value_13a_width48_mse_runs"
+  },
+  "output_dir": "artifacts/value_13a_width48_mse_runs",
+  "overfit": {
+    "batch_size": 256,
+    "enabled": false,
+    "epochs": 100,
+    "examples": 2048,
+    "minimum_relative_rmse_reduction": 0.1,
+    "phase_stratified": true,
+    "required_gate": true
+  },
+  "parameter_export_path": "artifacts/value_13a_width48_mse_candidate_001.txt",
+  "parameter_init": "C:/Code/OthelloAI_13_training/artifacts/width48_initial_from_value12a.txt",
+  "progress": {
+    "enabled": true,
+    "interval_seconds": 1.0
+  },
+  "resume": {
+    "allow_format_2_resume": true,
+    "allow_legacy_format_1": false,
+    "allowed_roots": [
+      "artifacts/value_13a_width48_mse_runs"
+    ],
+    "forbid_resume": false,
+    "override_optimizer_learning_rate": false,
+    "require_checkpoint": false
+  },
+  "resume_optimizer_state": true,
+  "run_name": "original_13_value_13a_width48_mse",
+  "seed": 20260721,
+  "source_model_sha256": "23ed3893159760e59d5e0477a8040e29f83410e30a86b4ee81134d4312743642",
+  "training": {
+    "batch_size": 512,
+    "deterministic": true,
+    "device": "auto",
+    "draw_target": 0.5,
+    "early_stopping": {
+      "enabled": true,
+      "min_delta": 5e-05,
+      "minimum_epochs": 2,
+      "patience": 2
+    },
+    "epochs": 3,
+    "gradient_clip": 5.0,
+    "learning_rate": 3e-05,
+    "loss": "mse",
+    "num_workers": 4,
+    "phase_loss_weights": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pin_memory": true,
+    "scheduler": {
+      "factor": 0.5,
+      "min_lr": 5e-06,
+      "patience": 0,
+      "threshold": 5e-05,
+      "type": "reduce_on_plateau"
+    },
+    "steps_per_epoch": 0,
+    "test_steps": 0,
+    "validation_steps": 0,
+    "weight_decay": 1e-06
+  }
+}

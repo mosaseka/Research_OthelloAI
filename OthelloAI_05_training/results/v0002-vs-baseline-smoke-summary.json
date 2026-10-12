@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-07-17T01:33:41.546765+00:00",
+  "config": {
+    "player_names": {
+      "A": "candidate",
+      "B": "baseline"
+    },
+    "commands": {
+      "A": [
+        "java",
+        "-Xmx1g",
+        "-Dothello.param=C:\\Code\\OthelloAI_05_training\\artifacts\\param_candidate_v0002_001.txt",
+        "-cp",
+        "build/current",
+        "OthelloAI_05"
+      ],
+      "B": [
+        "java",
+        "-Xmx1g",
+        "-Dothello.param=C:\\Code\\OthelloAI_05_training\\resources\\param.txt",
+        "-cp",
+        "build/current",
+        "OthelloAI_05"
+      ]
+    },
+    "working_directories": {
+      "A": "C:\\Code\\OthelloAI_05_training",
+      "B": "C:\\Code\\OthelloAI_05_training"
+    },
+    "pairs": 10,
+    "random_opening_plies": 24,
+    "master_seed": 2026071501,
+    "startup_timeout_ms": 60000,
+    "move_timeout_ms": 1050,
+    "shutdown_timeout_ms": 2000,
+    "requested_engine_overrides": {
+      "OTHELLO_MOVE_TIME_MS": 50,
+      "OTHELLO_THREADS": 1,
+      "OTHELLO_SEED": 20260715
+    },
+    "effective_engine_override_environment": {
+      "OTHELLO_MOVE_TIME_MS": "50",
+      "OTHELLO_THREADS": "1",
+      "OTHELLO_SEED": "20260715"
+    }
+  },
+  "pairs_requested": 10,
+  "games_requested": 20,
+  "games_recorded": 20,
+  "completed_games": 20,
+  "forfeit_games": 0,
+  "players": {
+    "A": {
+      "games": 20,
+      "wins": 12,
+      "draws": 1,
+      "losses": 7,
+      "score": 12.5,
+      "score_rate": 0.625,
+      "win_rate": 0.6,
+      "draw_rate": 0.05,
+      "average_disc_difference": 5.4,
+      "disc_difference_samples": 20,
+      "average_depth": 9.252100840336135,
+      "depth_samples": 357,
+      "average_nps": 3139259.7093023257,
+      "nps_samples": 258,
+      "wilson_95": {
+        "score_rate": [
+          0.4094895661514267,
+          0.8002291443353686
+        ],
+        "win_rate": [
+          0.3865815007622531,
+          0.781193467627183
+        ],
+        "draw_rate": [
+          0.008881448800795402,
+          0.23613119344674205
+        ],
+        "draws_count_as_half_for_score": true
+      },
+      "paired": {
+        "pairs_recorded": 10,
+        "complete_pairs": 10,
+        "invalid_pairs": 0,
+        "invalid_reasons": {},
+        "wins": 4,
+        "draws": 5,
+        "losses": 1,
+        "score": 6.25,
+        "score_rate": 0.625,
+        "average_disc_difference": 5.4,
+        "disc_difference_samples": 10,
+        "wilson_95": {
+          "score_rate": [
+            0.3329171471019795,
+            0.8476996529322981
+          ],
+          "draws_count_as_half_for_score": true,
+          "unit": "paired_colour_swapped_opening"
+        }
+      },
+      "by_colour": {
+        "black": {
+          "games": 10,
+          "wins": 6,
+          "draws": 0,
+          "losses": 4,
+          "score": 6.0,
+          "score_rate": 0.6,
+          "win_rate": 0.6,
+          "draw_rate": 0.0,
+          "average_disc_difference": 2.8,
+          "disc_difference_samples": 10,
+          "average_depth": 9.428571428571429,
+          "depth_samples": 182,
+          "average_nps": 3197311.153846154,
+          "nps_samples": 130,
+          "wilson_95": {
+            "score_rate": [
+              0.31267376973365824,
+              0.8318196702937638
+            ],
+            "win_rate": [
+              0.31267376973365824,
+              0.8318196702937638
+            ],
+            "draw_rate": [
+              0.0,
+              0.2775327998628892
+            ],
+            "draws_count_as_half_for_score": true
+          }
+        },
+        "white": {
+          "games": 10,
+          "wins": 6,
+          "draws": 1,
+          "losses": 3,
+          "score": 6.5,
+          "score_rate": 0.65,
+          "win_rate": 0.6,
+          "draw_rate": 0.1,
+          "average_disc_difference": 8.0,
+          "disc_difference_samples": 10,
+          "average_depth": 9.06857142857143,
+          "depth_samples": 175,
+          "average_nps": 3080301.2109375,
+          "nps_samples": 128,
+          "wilson_95": {
+            "score_rate": [
+              0.3536707235111688,
+              0.8630694365299644
+            ],
+            "win_rate": [
+              0.31267376973365824,
+              0.8318196702937638
+            ],
+            "draw_rate": [
+              0.017876213095072896,
+              0.4041500267952385
+            ],
+            "draws_count_as_half_for_score": true
+          }
+        }
+      }
+    },
+    "B": {
+      "games": 20,
+      "wins": 7,
+      "draws": 1,
+      "losses": 12,
+      "score": 7.5,
+      "score_rate": 0.375,
+      "win_rate": 0.35,
+      "draw_rate": 0.05,
+      "average_disc_difference": -5.4,
+      "disc_difference_samples": 20,
+      "average_depth": 9.002754820936639,
+      "depth_samples": 363,
+      "average_nps": 3097267.7088122605,
+      "nps_samples": 261,
+      "wilson_95": {
+        "score_rate": [
+          0.19977085566463149,
+          0.5905104338485734
+        ],
+        "win_rate": [
+          0.18119182410108206,
+          0.5671457233147638
+        ],
+        "draw_rate": [
+          0.008881448800795402,
+          0.23613119344674205
+        ],
+        "draws_count_as_half_for_score": true
+      },
+      "paired": {
+        "pairs_recorded": 10,
+        "complete_pairs": 10,
+        "invalid_pairs": 0,
+        "invalid_reasons": {},
+        "wins": 1,
+        "draws": 5,
+        "losses": 4,
+        "score": 3.75,
+        "score_rate": 0.375,
+        "average_disc_difference": -5.4,
+        "disc_difference_samples": 10,
+        "wilson_95": {
+          "score_rate": [
+            0.15230034706770185,
+            0.6670828528980204
+          ],
+          "draws_count_as_half_for_score": true,
+          "unit": "paired_colour_swapped_opening"
+        }
+      },
+      "by_colour": {
+        "black": {
+          "games": 10,
+          "wins": 3,
+          "draws": 1,
+          "losses": 6,
+          "score": 3.5,
+          "score_rate": 0.35,
+          "win_rate": 0.3,
+          "draw_rate": 0.1,
+          "average_disc_difference": -8.0,
+          "disc_difference_samples": 10,
+          "average_depth": 8.837837837837839,
+          "depth_samples": 185,
+          "average_nps": 3118529.3664122135,
+          "nps_samples": 131,
+          "wilson_95": {
+            "score_rate": [
+              0.13693056347003557,
+              0.6463292764888311
+            ],
+            "win_rate": [
+              0.10779126740630099,
+              0.6032218525388546
+            ],
+            "draw_rate": [
+              0.017876213095072896,
+              0.4041500267952385
+            ],
+            "draws_count_as_half_for_score": true
+          }
+        },
+        "white": {
+          "games": 10,
+          "wins": 4,
+          "draws": 0,
+          "losses": 6,
+          "score": 4.0,
+          "score_rate": 0.4,
+          "win_rate": 0.4,
+          "draw_rate": 0.0,
+          "average_disc_difference": -2.8,
+          "disc_difference_samples": 10,
+          "average_depth": 9.174157303370787,
+          "depth_samples": 178,
+          "average_nps": 3075842.5,
+          "nps_samples": 130,
+          "wilson_95": {
+            "score_rate": [
+              0.16818032970623614,
+              0.6873262302663417
+            ],
+            "win_rate": [
+              0.16818032970623614,
+              0.6873262302663417
+            ],
+            "draw_rate": [
+              0.0,
+              0.2775327998628892
+            ],
+            "draws_count_as_half_for_score": true
+          }
+        }
+      }
+    }
+  },
+  "faults": {
+    "total": 0,
+    "by_player": {
+      "A": 0,
+      "B": 0
+    },
+    "by_type": {}
+  },
+  "opening_seeds": [
+    6087033405817326232,
+    13637009012264089668,
+    17528687499887158768,
+    9218298907251358506,
+    18287645024678083633,
+    17602136212124270315,
+    11422431072735645562,
+    6091679450922348788,
+    17634651223063244728,
+    18382254125142720347
+  ]
+}

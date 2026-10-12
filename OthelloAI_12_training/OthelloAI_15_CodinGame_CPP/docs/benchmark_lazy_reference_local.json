@@ -1,0 +1,23 @@
+{
+  "turns": 40,
+  "opponent_delay_ms": 100,
+  "first_ms": 6.152900023153052,
+  "normal_turns": 39,
+  "mean_ms": 93.96343589805139,
+  "p50_ms": 115.16129999654368,
+  "p95_ms": 115.22000000695698,
+  "p99_ms": 115.24720001034439,
+  "max_ms": 115.24720001034439,
+  "normal_under_150ms": 39,
+  "exit_code": 0,
+  "search": {
+    "metric_rows": 39,
+    "variant": "cpp16_baseline",
+    "completed_depth_mean": 12.871794871794872,
+    "completed_depth_min": 7,
+    "completed_depth_max": 17,
+    "nodes_mean": 468914.8461538461,
+    "evaluations_mean": 328943.07692307694,
+    "tt_hits_mean": 9512.923076923076
+  }
+}

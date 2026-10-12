@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "game_id": "opponent_game_04_20260722",
+  "source_file": "game_04_20260722_raw.txt",
+  "engine": "original_10",
+  "engine_colour": "white",
+  "final_discs": {
+    "engine": 28,
+    "opponent": 36
+  },
+  "final_disc_difference_engine": -8,
+  "observed_focus": {
+    "stones_before_engine_move": 29,
+    "engine_move": [0, 4],
+    "evaluation_before_move": 0.82,
+    "evaluation_at_next_engine_turn": -4.45,
+    "same_phase_transition": true,
+    "questions": [
+      "rank_of_observed_move",
+      "deep_search_best_move_and_gap",
+      "opponent_reply_causing_evaluation_drop",
+      "candidate_11a_and_11b_rank_change"
+    ]
+  },
+  "sample_size_warning": "The five observed direct losses do not establish strength or justify opponent-specific fitting.",
+  "usage": "diagnostic_only",
+  "training_eligible": false,
+  "adoption_gate_eligible": false,
+  "allowed_uses": [
+    "original_10_vs_original_11_position_evaluation",
+    "deep_search_agreement",
+    "candidate_move_ranking",
+    "two_ply_opponent_reply_diagnosis",
+    "regression_diagnosis"
+  ],
+  "forbidden_uses": [
+    "training",
+    "fine_tuning",
+    "candidate_adoption_by_itself",
+    "opponent_specific_optimization"
+  ]
+}

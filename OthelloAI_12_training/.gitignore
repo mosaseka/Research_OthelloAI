@@ -1,0 +1,35 @@
+# Local datasets and generated artifacts
+data/
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/README.md
+
+# Diagnostics inputs and generated reports
+diagnostics/opponent_logs/*.txt
+!diagnostics/opponent_logs/.gitkeep
+!diagnostics/opponent_logs/game_02_20260722_raw.txt
+!diagnostics/opponent_logs/game_04_20260722_raw.txt
+!diagnostics/opponent_logs/game_05_20260722_raw.txt
+diagnostics/output/*
+!diagnostics/output/.gitkeep
+diagnostics/regression_sets/*
+!diagnostics/regression_sets/.gitkeep
+
+# Python / Java build products
+__pycache__/
+*.py[cod]
+*.class
+build/
+.venv/
+venv/
+
+# Model/checkpoint products
+*.pt
+*.pth
+*.onnx
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

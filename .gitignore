@@ -1,0 +1,26 @@
+# Local build products and caches
+build/
+__pycache__/
+*.py[cod]
+*.class
+*.exe
+*.o
+.venv/
+venv/
+
+# Non-redistributable Egaroucid datasets and generated samples
+**/data/raw/**
+**/data/processed/**
+**/resources/Egaroucid_Train_Data_v0002_*/
+!**/data/raw/.gitkeep
+!**/data/processed/.gitkeep
+*.part
+
+# Local training checkpoints
+*.pt
+*.pth
+*.onnx
+
+# Editor and OS files
+.DS_Store
+Thumbs.db

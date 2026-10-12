@@ -1,0 +1,19 @@
+# Java and Python build products
+build/
+*.class
+**/__pycache__/
+*.py[cod]
+
+# Egaroucid data is not redistributable. Keep only scripts and documentation.
+data/raw/*
+data/processed/*
+resources/Egaroucid_Train_Data_v0002_*/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+*.part
+
+# PyTorch checkpoints and per-run logs can be very large.
+artifacts/training_runs/
+
+# Arena game-by-game logs are reproducible; compact summaries may be retained.
+results/*.jsonl

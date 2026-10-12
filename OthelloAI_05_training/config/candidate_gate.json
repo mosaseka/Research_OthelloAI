@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "java_python_parity": {
+    "positions": 4096,
+    "seed": 20260715,
+    "tolerance": 1e-12,
+    "timeout_seconds": 900
+  },
+  "heldout": {
+    "training_config": "config/train_full.json",
+    "paths": [
+      "data/raw/Egaroucid_Train_Data.zip"
+    ],
+    "split_name": "test",
+    "split": {
+      "seed": 20260715,
+      "ratios": {
+        "train": 0.9,
+        "val": 0.05,
+        "test": 0.05
+      }
+    },
+    "sample_seed": 20260715,
+    "samples_per_phase": 4096,
+    "max_source_records": null
+  },
+  "rmse_gate": {
+    "minimum_relative": 0.01,
+    "minimum_absolute_disc": 0.1,
+    "endgame_phase": 3,
+    "endgame_tolerance_disc": 0.0
+  },
+  "d4_direction_check": {
+    "samples_per_phase": 128,
+    "maximum_candidate_span_disc": null,
+    "require_nonworsening": false,
+    "nonworsening_tolerance_disc": 0.0
+  }
+}

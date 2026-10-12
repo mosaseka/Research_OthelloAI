@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "safety": {
+    "dry_run_only": true,
+    "allow_production_pipeline": false,
+    "allow_external_dataset_reads": false
+  },
+  "feature_schema": "exact-mobility-v1",
+  "run_name": "original_11_value_dry_run",
+  "candidate_name": "dry_run_only",
+  "source_model_sha256": "ff16c4d3d697b1f838985091648ce4acd63e708f14a1a9f693e19afffc6ab6b1",
+  "seed": 20260799,
+  "parameter_init": "C:/Users/mosas/Box/01_授業関連/3-1/計算機科学応用演習/2026_1/0_課題/2026_07_15_ネットワークプログラミング/original_11/resources/value_param.txt",
+  "ai_source": "C:/Users/mosas/Box/01_授業関連/3-1/計算機科学応用演習/2026_1/0_課題/2026_07_15_ネットワークプログラミング/original_11/OthelloAI_11.java",
+  "device": "cpu",
+  "dtype": "float32",
+  "batch_size": 8,
+  "epochs": 1,
+  "train_batches": 1,
+  "validation_batches": 1,
+  "checkpoint_save_resume_cycles": 1,
+  "export_parameter_count": 25436,
+  "fixture_file": "tests/fixtures/dry_run_positions.json",
+  "fixture_records": 8,
+  "learning_rate": 0.00003,
+  "weight_decay": 0.000001,
+  "gradient_clip": 5.0,
+  "scheduler": {
+    "type": "reduce_on_plateau",
+    "factor": 0.5,
+    "patience": 0,
+    "threshold": 0.00005,
+    "min_lr": 0.000005
+  },
+  "early_stopping": {
+    "enabled": true,
+    "patience": 2,
+    "min_delta": 0.00005,
+    "minimum_epochs": 1
+  },
+  "parity": {
+    "positions": 32,
+    "seed": 20260799,
+    "tolerance": 1e-12,
+    "timeout_seconds": 180
+  },
+  "expected_parameter_count": 25436
+}

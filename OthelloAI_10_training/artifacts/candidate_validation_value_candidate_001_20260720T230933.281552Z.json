@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "candidate_feature_schema": "exact-mobility-v1",
+  "baseline_feature_schema": "legacy-v1",
+  "generated_at_utc": "2026-07-20T23:09:33.294721+00:00",
+  "config": {
+    "schema_version": 1,
+    "feature_schema": "exact-mobility-v1",
+    "baseline_feature_schema": "legacy-v1",
+    "ai_source": "C:/Users/mosas/Box/01_授業関連/3-1/計算機科学応用演習/2026_1/0_課題/2026_07_15_ネットワークプログラミング/original_10/OthelloAI_10.java",
+    "baseline": "C:/Users/mosas/Box/01_授業関連/3-1/計算機科学応用演習/2026_1/0_課題/2026_07_15_ネットワークプログラミング/original_10/resources/param.txt",
+    "java_python_parity": {
+      "positions": 4096,
+      "seed": 20260720,
+      "tolerance": 1e-12,
+      "timeout_seconds": 900
+    },
+    "heldout": {
+      "prepared_manifest": "C:/Code/OthelloAI_05_training/data/processed/egaroucid_v2/conversion_manifest.json",
+      "split": "test",
+      "sample_seed": 20260720,
+      "samples_per_phase": 4096,
+      "progress_every_records": 250000
+    },
+    "rmse_gate": {
+      "minimum_relative": 0.01,
+      "minimum_absolute_disc": 0.1,
+      "endgame_phase": 3,
+      "endgame_tolerance_disc": 0.0
+    },
+    "d4_direction_check": {
+      "samples_per_phase": 128,
+      "maximum_candidate_span_disc": null,
+      "maximum_candidate_mean_span_disc": null,
+      "require_nonworsening": false,
+      "nonworsening_tolerance_disc": 0.0
+    }
+  },
+  "checks": {
+    "parameters": {
+      "pass": true,
+      "required_count": 25436,
+      "all_values_must_be_finite": true,
+      "candidate_hash_bound": false
+    },
+    "feature_schema": {
+      "pass": true,
+      "python_evaluator": "exact-mobility-v1",
+      "candidate_required": "exact-mobility-v1",
+      "baseline_required": "legacy-v1",
+      "bridge_load_mode": "EXACT_MOBILITY"
+    },
+    "heldout_integrity": {
+      "pass": true,
+      "split": "test",
+      "shard_count": 5200,
+      "sample_sha256": "c5fe772f2b64a5b226eb0728e660e24c91182c7e92d3fb14b474adf11a36d495"
+    },
+    "java_python_parity": {
+      "pass": true,
+      "positions": 4096,
+      "command": [
+        "C:\\Users\\mosas\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+        "C:\\Code\\OthelloAI_10_training\\tests\\compare_java_eval.py",
+        "--positions",
+        "4096",
+        "--seed",
+        "20260720",
+        "--tolerance",
+        "1e-12",
+        "--param",
+        "C:\\Code\\OthelloAI_10_training\\artifacts\\value_candidate_001.txt",
+        "--ai-source",
+        "C:\\Users\\mosas\\Box\\01_授業関連\\3-1\\計算機科学応用演習\\2026_1\\0_課題\\2026_07_15_ネットワークプログラミング\\original_10\\OthelloAI_10.java"
+      ],
+      "returncode": 0,
+      "stdout": "PASS: 4096 reachable positions, seed=20260720, integer mismatches=0, feature mismatches=0\nraw max_abs_error=0.000e+00, mean_abs_error=0.000e+00, tolerance=1.000e-12\nphase_counts={0: 1856, 1: 690, 2: 690, 3: 860}, player_counts={0: 2037, 1: 2059}\n",
+      "stderr": "",
+      "duration_seconds": 2.5775611999997636
+    },
+    "rmse": {
+      "pass": true,
+      "improvement_pass": true,
+      "absolute_improvement_pass": true,
+      "relative_improvement_pass": true,
+      "endgame_nonworsening_pass": true,
+      "absolute_improvement_disc": 0.16213066349842897,
+      "relative_improvement": 0.016577910479623988,
+      "minimum_absolute_disc": 0.1,
+      "minimum_relative": 0.01,
+      "endgame_phase": 3,
+      "endgame_change_disc": -0.2783025854052781,
+      "endgame_tolerance_disc": 0.0
+    },
+    "d4_direction_difference": {
+      "pass": true,
+      "inspection_completed": true,
+      "within_maximum_limit": true,
+      "within_mean_limit": true,
+      "maximum_nonworsening": true,
+      "mean_nonworsening": true,
+      "require_nonworsening": false,
+      "configured_maximum_candidate_span_disc": null,
+      "configured_maximum_candidate_mean_span_disc": null,
+      "candidate_minus_baseline_maximum_span_disc": -2.9875114862973504,
+      "candidate_minus_baseline_mean_span_disc": -0.19183312374227796,
+      "nonworsening_tolerance_disc": 0.0
+    }
+  },
+  "candidate": {
+    "path": "C:\\Code\\OthelloAI_10_training\\artifacts\\value_candidate_001.txt",
+    "sha256": "ff16c4d3d697b1f838985091648ce4acd63e708f14a1a9f693e19afffc6ab6b1",
+    "expected_sha256": null,
+    "hash_matches": true,
+    "count": 25436,
+    "expected_count": 25436,
+    "all_finite": true,
+    "bad_lines": [],
+    "pass": true
+  },
+  "baseline": {
+    "path": "C:\\Users\\mosas\\Box\\01_授業関連\\3-1\\計算機科学応用演習\\2026_1\\0_課題\\2026_07_15_ネットワークプログラミング\\original_10\\resources\\param.txt",
+    "sha256": "abadbd41673323d10c357c7e459a35b2de3ec6929aa95a52be577b1e335b19b1",
+    "expected_sha256": null,
+    "hash_matches": true,
+    "count": 25436,
+    "expected_count": 25436,
+    "all_finite": true,
+    "bad_lines": [],
+    "pass": true
+  },
+  "heldout": {
+    "manifest_path": "C:\\Code\\OthelloAI_05_training\\data\\processed\\egaroucid_v2\\conversion_manifest.json",
+    "manifest_sha256": "744becf9612e3521886aa991db298f86940f2829d62c86cf439d6ba2510f018c",
+    "manifest_status": "verified-full",
+    "manifest_schema_version": 2,
+    "split": "test",
+    "split_contract": {
+      "algorithm": "sha256-canonical-d4-board-v1",
+      "ratios": {
+        "test": "0.05",
+        "train": "0.9",
+        "val": "0.05"
+      },
+      "seed": "20260715",
+      "stable_id": "lexicographically smallest D4 transform of the 64-cell relative board",
+      "unit": "canonical_d4_relative_board"
+    },
+    "output_root": "C:\\Code\\OthelloAI_05_training\\data\\processed\\egaroucid_v2",
+    "shard_count": 5200,
+    "expected_records": 2603397,
+    "population_by_phase": {
+      "0": 1101493,
+      "1": 500655,
+      "2": 501388,
+      "3": 499861
+    },
+    "records_scanned": 2603397,
+    "records_by_phase": {
+      "0": 1101493,
+      "1": 500655,
+      "2": 501388,
+      "3": 499861
+    },
+    "selected_by_phase": {
+      "0": 4096,
+      "1": 4096,
+      "2": 4096,
+      "3": 4096
+    },
+    "sampling_unit": "unique_canonical_d4_board",
+    "selected_observations_by_phase": {
+      "0": 4502,
+      "1": 4096,
+      "2": 4096,
+      "3": 4096
+    },
+    "duplicate_targets": "mean target over all encountered occurrences while a selected canonical board remains in the deterministic bottom-k heap",
+    "sample_seed": 20260720,
+    "sample_sha256": "c5fe772f2b64a5b226eb0728e660e24c91182c7e92d3fb14b474adf11a36d495",
+    "bytes_verified": 177329325,
+    "all_shard_rows_sizes_and_hashes_verified": true
+  },
+  "rmse": {
+    "color_orientations_per_position": 2,
+    "baseline_feature_schema": "legacy-v1",
+    "candidate_feature_schema": "exact-mobility-v1",
+    "baseline": {
+      "count": 32768,
+      "rmse_disc": 9.77992152254078,
+      "aggregation": "prepared_split_population_weighted",
+      "phases": {
+        "0": {
+          "count": 8192,
+          "rmse_disc": 10.342500186431757,
+          "population_count": 1101493,
+          "population_weight": 0.42309835956636654
+        },
+        "1": {
+          "count": 8192,
+          "rmse_disc": 10.464278366170834,
+          "population_count": 500655,
+          "population_weight": 0.1923083571195634
+        },
+        "2": {
+          "count": 8192,
+          "rmse_disc": 9.7382279964693,
+          "population_count": 501388,
+          "population_weight": 0.19258991233377007
+        },
+        "3": {
+          "count": 8192,
+          "rmse_disc": 7.592176960758662,
+          "population_count": 499861,
+          "population_weight": 0.19200337098029996
+        }
+      }
+    },
+    "candidate": {
+      "count": 32768,
+      "rmse_disc": 9.617790859042351,
+      "aggregation": "prepared_split_population_weighted",
+      "phases": {
+        "0": {
+          "count": 8192,
+          "rmse_disc": 10.296824583429224,
+          "population_count": 1101493,
+          "population_weight": 0.42309835956636654
+        },
+        "1": {
+          "count": 8192,
+          "rmse_disc": 10.271347095377392,
+          "population_count": 500655,
+          "population_weight": 0.1923083571195634
+        },
+        "2": {
+          "count": 8192,
+          "rmse_disc": 9.418318999555938,
+          "population_count": 501388,
+          "population_weight": 0.19258991233377007
+        },
+        "3": {
+          "count": 8192,
+          "rmse_disc": 7.313874375353384,
+          "population_count": 499861,
+          "population_weight": 0.19200337098029996
+        }
+      }
+    }
+  },
+  "d4_direction_difference": {
+    "sample_rule": "first N positions per phase from the deterministic heldout sample",
+    "samples_per_phase": 128,
+    "color_orientations_per_position": 2,
+    "baseline_feature_schema": "legacy-v1",
+    "candidate_feature_schema": "exact-mobility-v1",
+    "baseline": {
+      "positions": 1024,
+      "maximum_span_disc": 2.987511486297386,
+      "mean_span_disc": 0.1918331237422841,
+      "rms_span_disc": 0.4632168495941007,
+      "maximum_span_java_units": 299,
+      "mean_span_java_units": 19.1767578125,
+      "phases": {
+        "0": {
+          "positions": 256,
+          "maximum_span_disc": 1.2427257595068042,
+          "mean_span_disc": 0.09696601271293015,
+          "rms_span_disc": 0.21228414860562397,
+          "maximum_span_java_units": 124,
+          "mean_span_java_units": 9.69140625
+        },
+        "1": {
+          "positions": 256,
+          "maximum_span_disc": 1.6387309779194261,
+          "mean_span_disc": 0.09596449318391047,
+          "rms_span_disc": 0.2532456062961958,
+          "maximum_span_java_units": 164,
+          "mean_span_java_units": 9.5859375
+        },
+        "2": {
+          "positions": 256,
+          "maximum_span_disc": 2.89045897651176,
+          "mean_span_disc": 0.3041313614396851,
+          "rms_span_disc": 0.591599035657506,
+          "maximum_span_java_units": 289,
+          "mean_span_java_units": 30.4140625
+        },
+        "3": {
+          "positions": 256,
+          "maximum_span_disc": 2.987511486297386,
+          "mean_span_disc": 0.27027062763261056,
+          "rms_span_disc": 0.6317373529743998,
+          "maximum_span_java_units": 299,
+          "mean_span_java_units": 27.015625
+        }
+      }
+    },
+    "candidate": {
+      "positions": 1024,
+      "maximum_span_disc": 3.552713678800501e-14,
+      "mean_span_disc": 6.145257913647839e-15,
+      "rms_span_disc": 8.656936892918527e-15,
+      "maximum_span_java_units": 0,
+      "mean_span_java_units": 0.0,
+      "phases": {
+        "0": {
+          "positions": 256,
+          "maximum_span_disc": 2.1316282072803006e-14,
+          "mean_span_disc": 5.186823193170653e-15,
+          "rms_span_disc": 7.038542544125293e-15,
+          "maximum_span_java_units": 0,
+          "mean_span_java_units": 0.0
+        },
+        "1": {
+          "positions": 256,
+          "maximum_span_disc": 3.552713678800501e-14,
+          "mean_span_disc": 6.411537967210279e-15,
+          "rms_span_disc": 8.79251776862914e-15,
+          "maximum_span_java_units": 0,
+          "mean_span_java_units": 0.0
+        },
+        "2": {
+          "positions": 256,
+          "maximum_span_disc": 2.842170943040401e-14,
+          "mean_span_disc": 8.375244942016025e-15,
+          "rms_span_disc": 1.1285568587282661e-14,
+          "maximum_span_java_units": 0,
+          "mean_span_java_units": 0.0
+        },
+        "3": {
+          "positions": 256,
+          "maximum_span_disc": 2.842170943040401e-14,
+          "mean_span_disc": 4.6074255521944e-15,
+          "rms_span_disc": 6.749571636519864e-15,
+          "maximum_span_java_units": 0,
+          "mean_span_java_units": 0.0
+        }
+      }
+    }
+  },
+  "decision": {
+    "pass": true,
+    "eligible_for_ab": true,
+    "failed_checks": []
+  }
+}

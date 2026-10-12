@@ -1,0 +1,87 @@
+{
+  "dataset_kind": "egaroucid_v0002_games",
+  "seed": 20260715,
+  "parameter_init": "resources/param.txt",
+  "model": {
+    "dtype": "float32"
+  },
+  "progress": {
+    "enabled": true,
+    "interval_seconds": 1.0
+  },
+  "data": {
+    "paths_by_split": {
+      "train": [
+        "data/processed/egaroucid_v2/train/**/*.txt"
+      ],
+      "val": [
+        "data/processed/egaroucid_v2/val/**/*.txt"
+      ],
+      "test": [
+        "data/processed/egaroucid_v2/test/**/*.txt"
+      ]
+    },
+    "prepared_manifest": "data/processed/egaroucid_v2/conversion_manifest.json",
+    "strict": true,
+    "target_scale": 64.0,
+    "clip_targets": true,
+    "d4_augmentation": true,
+    "train_color_augmentation": "random",
+    "eval_color_augmentation": "both",
+    "shuffle_buffer": 8192,
+    "epoch_sampling": {
+      "mode": "full_pass",
+      "required_phases": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "split": {
+      "seed": 20260715,
+      "ratios": {
+        "train": 0.9,
+        "val": 0.05,
+        "test": 0.05
+      }
+    },
+    "max_source_records": {
+      "train": 0,
+      "val": 0,
+      "test": 0
+    }
+  },
+  "training": {
+    "device": "auto",
+    "deterministic": true,
+    "epochs": 3,
+    "batch_size": 512,
+    "steps_per_epoch": 0,
+    "validation_steps": 0,
+    "test_steps": 0,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.000001,
+    "gradient_clip": 5.0,
+    "phase_loss_weights": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "num_workers": 0,
+    "pin_memory": false
+  },
+  "overfit": {
+    "enabled": false,
+    "examples": 2048,
+    "phase_stratified": true,
+    "epochs": 100,
+    "batch_size": 256,
+    "minimum_relative_rmse_reduction": 0.1
+  },
+  "output": {
+    "runs_dir": "artifacts/training_runs",
+    "candidate_path": "artifacts/param_candidate_v0002_001.txt"
+  }
+}
