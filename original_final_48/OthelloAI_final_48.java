@@ -120,6 +120,7 @@ public class OthelloAI_final_48 {
   };
   static final long move_time_limit_ms = readLongSetting(
   "othello.moveTimeMs", "OTHELLO_MOVE_TIME_MS", 9_500L, 10L, 600_000L);
+  static final boolean report_search_budget = Boolean.getBoolean("othello.reportSearchBudget");
   static final int configured_midgame_depth = (int) readLongSetting(
   "othello.maxDepth", "OTHELLO_MAX_DEPTH", hw2, 1L, hw2);
   static final long time_check_interval = 2_048L;
@@ -4307,6 +4308,10 @@ public class OthelloAI_final_48 {
 
       strt = tim();
       begin_move_timer(strt);
+      if (report_search_budget) {
+        System.out.println("SEARCH_MS " + remaining_time_ms());
+        System.out.flush();
+      }
       System.err.println("n_stones: " + n_stones);
       System.err.println((n_stones - 4) + " moves");
       b.n = n_stones;

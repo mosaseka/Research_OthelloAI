@@ -19,6 +19,23 @@
 
 フォルダ番号は開発・実験の系列を表します。各候補の棋力は、同じ条件での対局結果をもとに判断してください。個別READMEに登場する `original_XX` は、開発時の元プロジェクト名です。
 
+## GUIで対戦する
+
+WindowsとLinuxで同じ対戦用JARを使えます。ビルドにはJDK 25、起動にはJava 25と、OS・CPUに合った[JavaFX 25 SDK](https://gluonhq.com/products/javafx/)が必要です。Linuxではグラフィカルなデスクトップ環境と[GTK 3.20以降](https://openjfx.io/highlights/25/)も必要です。
+
+- **Windows**では `run.vbs` をダブルクリックすると、コンソールを表示せずに起動します。端末からは `.\run.bat` でも起動できます。JavaFX SDKを既定の `C:\Program Files\Java\javafx-sdk-25` 以外に置いた場合は、環境変数 `JAVAFX_LIB` にSDKの `lib` フォルダの絶対パスを設定してください。
+- **Linux**では、展開したSDKへのパスを指定して実行します。
+
+  ```sh
+  JAVAFX_LIB="$HOME/javafx-sdk-25/lib" sh run.sh
+  ```
+
+ビルドだけ行う場合は、`run.bat --build-only` または `sh run.sh --build-only` を使います。別のPCへ移すときは `build/othello_gui/dist/` を丸ごとコピーしてください。このフォルダに `othello.jar` とAIのモデルが入ります。移動先で、このフォルダから次のコマンドで起動できます。
+
+```text
+java --enable-native-access=javafx.graphics,ALL-UNNAMED --module-path "<JavaFX SDKのlibフォルダ>" --add-modules javafx.controls -jar othello.jar
+```
+
 ## 主な技術
 
 CodinGame版では、次の仕組みを使っています。採用範囲や設定は版ごとに異なります。
