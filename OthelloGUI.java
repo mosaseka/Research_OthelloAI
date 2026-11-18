@@ -3,6 +3,7 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
@@ -10,11 +11,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class OthelloGUI extends Application {
+    private static final String AI_CLASS = "OthelloAI_final_48";
     private static final int OFFSET_Y = 10;
     private static final int OFFSET_X = 10;
     private static final int RECT_SIZE = 60;
@@ -30,6 +33,7 @@ public class OthelloGUI extends Application {
     private Canvas canvas;
     private Label stoneLabel;
     private Label valLabel;
+    private Button startButton;
     private Pane root;
 
     @Override
@@ -51,9 +55,12 @@ public class OthelloGUI extends Application {
                 throw new NumberFormatException();
             }
             initAI();
-        } catch (Exception e) {
+        } catch (NumberFormatException | IOException e) {
             System.err.println("Error initializing AI: " + e.getMessage());
-            e.printStackTrace();
+            String message = e instanceof NumberFormatException
+                    ? "Select 0 (black) or 1 (white) for the AI."
+                    : "Could not start " + AI_CLASS + ": " + e.getMessage();
+            new Alert(Alert.AlertType.ERROR, message).showAndWait();
             Platform.exit();
             return;
         }
@@ -66,12 +73,12 @@ public class OthelloGUI extends Application {
         stoneLabel.setLayoutX(250);
         stoneLabel.setLayoutY(600);
         
-        valLabel = new Label("value: 0");
+        valLabel = new Label();
         valLabel.setStyle("-fx-font-size: 20px;");
         valLabel.setLayoutX(10);
         valLabel.setLayoutY(650);
         
-        Button startButton = new Button("Start");
+        startButton = new Button("Start");
         startButton.setLayoutX(600);
         startButton.setLayoutY(10);
         startButton.setOnAction(e -> startGame());
@@ -79,60 +86,43 @@ public class OthelloGUI extends Application {
         root.getChildren().addAll(canvas, stoneLabel, valLabel, startButton);
         
         Scene scene = new Scene(root, 1000, 700);
-        primaryStage.setTitle("OthelloGUI");
+        primaryStage.setTitle("OthelloGUI - " + AI_CLASS);
         primaryStage.setScene(scene);
-        primaryStage.setOnCloseRequest(e -> {
-            if (aiProcess != null) {
-                aiProcess.destroy();
-            }
-        });
         primaryStage.show();
         
         startGame();
     }
 
+    @Override
+    public void stop() {
+        if (aiProcess != null) {
+            aiProcess.destroy();
+        }
+    }
+
     private void initAI() throws IOException {
-        ProcessBuilder pb = new ProcessBuilder("java", "-cp", ".", "OthelloAI_03");
-        pb.redirectErrorStream(false);
-        aiProcess = pb.start();
-        
-        // エラー出力を別スレッドで読み取る
-        new Thread(() -> {
-            try (BufferedReader errorReader = new BufferedReader(
-                    new InputStreamReader(aiProcess.getErrorStream()))) {
-                String line;
-                while ((line = errorReader.readLine()) != null) {
-                    System.err.println("AI stderr: " + line);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
-        
+        String javaCommand = ProcessHandle.current().info().command().orElse("java");
+        // The launcher supplies an absolute classpath for the AI's working directory.
+        aiProcess = new ProcessBuilder(javaCommand, "-cp", System.getProperty("java.class.path"), AI_CLASS)
+                .directory(Path.of("original_final_48").toAbsolutePath().toFile())
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start();
         aiOutput = new BufferedReader(new InputStreamReader(aiProcess.getInputStream()));
         aiInput = new BufferedWriter(new OutputStreamWriter(aiProcess.getOutputStream()));
-        
-        // ★修正: まずREADYを待つ
-        System.err.println("Waiting for READY...");
-        String line;
-        while ((line = aiOutput.readLine()) != null) {
-            System.err.println("AI stdout: " + line);
-            if (line.equals("READY")) {
-                System.err.println("AI is ready");
-                break;
-            }
+
+        if (!"READY".equals(aiOutput.readLine())) {
+            throw new IOException("The AI did not finish initialization. Check the console for details.");
         }
-        
-        // ★修正: READYを受け取った後にAIプレイヤーを送信
         aiInput.write(aiPlayer + "\n");
         aiInput.flush();
-        System.err.println("Sent AI player: " + aiPlayer);
     }
 
     private void startGame() {
         othello = new Othello();
+        valLabel.setText("value: —");
         othello.checkLegal();
         showGrid();
+        requestAIMove();
     }
 
     private void drawBoard() {
@@ -195,126 +185,77 @@ public class OthelloGUI extends Application {
         }
         
         updateStoneLabel();
-        
-        // ★修正: ゲーム開始時のAI先手の処理
-        if (othello.player == aiPlayer && othello.player != -1 && 
-            othello.nStones[0] + othello.nStones[1] == 4) { // 初期状態のみ
-            valLabel.setText("AI thinking...");
-            new Thread(() -> {
-                executeAIMove();
-            }).start();
-        }
     }
 
     private void handleMove(int y, int x) {
-        System.out.println(y + " " + x);
-        
         othello.move(y, x);
-        updateStoneLabel();
-        
-        // ★修正: 合法手チェックの前にshowGridを呼ばない
-        // ★修正: ゲーム終了チェック
         if (!othello.checkLegal()) {
             othello.player = 1 - othello.player;
             if (!othello.checkLegal()) {
                 othello.printInfo();
                 othello.player = -1;
-                showGrid(); // ★ゲーム終了時のみ表示更新
-                System.out.println("end");
-                return; // ★終了したら抜ける
             }
         }
-        
-        showGrid(); // ★合法手チェック後に表示更新
-        
-        // ★修正: AIの番なら別スレッドで実行
-        if (othello.player == aiPlayer) {
-            valLabel.setText("AI thinking...");
-            new Thread(() -> {
-                executeAIMove();
-            }).start();
-        }
+        showGrid();
+        requestAIMove();
     }
 
-    private void executeAIMove() {
-        try {
-            // グリッド情報を送信（8行、各行8文字）
-            StringBuilder gridStr = new StringBuilder();
-            for (int i = 0; i < Othello.HW; i++) {
-                for (int j = 0; j < Othello.HW; j++) {
-                    if (othello.grid[i][j] == Othello.BLACK) {
-                        gridStr.append('0');
-                    } else if (othello.grid[i][j] == Othello.WHITE) {
-                        gridStr.append('1');
-                    } else {
-                        gridStr.append('.');
-                    }
+    private void requestAIMove() {
+        if (othello.player != aiPlayer) {
+            return;
+        }
+
+        StringBuilder board = new StringBuilder();
+        for (int[] row : othello.grid) {
+            for (int cell : row) {
+                switch (cell) {
+                    case Othello.BLACK -> board.append('0');
+                    case Othello.WHITE -> board.append('1');
+                    default -> board.append('.');
                 }
-                gridStr.append('\n');
             }
-            
-            System.err.println("Sending board to AI:");
-            System.err.print(gridStr.toString());
-            
-            aiInput.write(gridStr.toString());
+            board.append('\n');
+        }
+
+        valLabel.setText("AI thinking...");
+        startButton.setDisable(true);
+        String position = board.toString();
+        Thread worker = new Thread(() -> executeAIMove(position), "othello-ai-move");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private void executeAIMove(String position) {
+        try {
+            aiInput.write(position);
             aiInput.flush();
-            
-            System.err.println("Waiting for AI response...");
-            
-            // AIの応答を読み取る
             String line = aiOutput.readLine();
-            System.err.println("AI response: " + line);
-            
             if (line == null) {
-                System.err.println("AI process terminated");
-                return;
+                throw new IOException("The AI process exited. Relaunch the game to try again.");
             }
-            
             String[] parts = line.trim().split("\\s+");
-            if (parts.length < 3) {
-                System.err.println("Invalid AI response format: " + line);
-                return;
+            if (parts.length != 3) {
+                throw new IOException("Invalid AI response: " + line);
             }
-            
             int y = Integer.parseInt(parts[0]);
             int x = Integer.parseInt(parts[1]);
             double val = Double.parseDouble(parts[2]);
-            
-            System.out.println(y + " " + x);
-            
-            // ★修正: UI更新は全てPlatform.runLaterで実行
+
             Platform.runLater(() -> {
+                startButton.setDisable(false);
+                if (!Othello.inside(y, x) || othello.grid[y][x] != Othello.LEGAL) {
+                    valLabel.setText("Illegal move from AI: " + line);
+                    return;
+                }
                 valLabel.setText("value: " + val);
-                othello.move(y, x);
-                updateStoneLabel();
-                
-                // ★修正: 合法手チェックの前にshowGridを呼ばない
-                // ★修正: ゲーム終了チェック
-                if (!othello.checkLegal()) {
-                    othello.player = 1 - othello.player;
-                    if (!othello.checkLegal()) {
-                        othello.printInfo();
-                        othello.player = -1;
-                        showGrid(); // ★ゲーム終了時のみ表示更新
-                        System.out.println("end");
-                        return; // ★終了したら抜ける
-                    }
-                }
-                
-                showGrid(); // ★合法手チェック後に表示更新
-                
-                // ★修正: パス後にAIの番になった場合の処理
-                if (othello.player == aiPlayer) {
-                    valLabel.setText("AI thinking...");
-                    new Thread(() -> {
-                        executeAIMove();
-                    }).start();
-                }
+                handleMove(y, x);
             });
-            
-        } catch (Exception e) {
-            System.err.println("Error in executeAIMove:");
-            e.printStackTrace();
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Error reading AI move: " + e.getMessage());
+            Platform.runLater(() -> {
+                startButton.setDisable(false);
+                valLabel.setText("AI error: " + e.getMessage());
+            });
         }
     }
 
