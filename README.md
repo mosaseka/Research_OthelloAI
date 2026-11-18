@@ -36,6 +36,8 @@ WindowsとLinuxで同じ対戦用JARを使えます。ビルドにはJDK 25、�
 java --enable-native-access=javafx.graphics,ALL-UNNAMED --module-path "<JavaFX SDKのlibフォルダ>" --add-modules javafx.controls -jar othello.jar
 ```
 
+タイトル画面と対局画面の右上にある「全画面表示」ボタン、または `F11` キーで全画面に切り替えられます。全画面を解除するには `Esc` キー、`F11` キー、または「全画面を解除」ボタンを使います。
+
 ## 主な技術
 
 CodinGame版では、次の仕組みを使っています。採用範囲や設定は版ごとに異なります。

@@ -3,15 +3,20 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.AccessibleRole;
+import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -19,6 +24,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -48,8 +54,9 @@ public class OthelloGUI extends Application {
     private static final String LABEL_STYLE = "-fx-text-fill: white;";
 
     private Stage stage;
-    private Scene titleScene;
-    private Scene gameScene;
+    private Parent titlePane;
+    private Parent gamePane;
+    private final StackPane content = new StackPane();
     private final Canvas canvas = new Canvas(BOARD_SIZE, BOARD_SIZE);
     private final Pane boardPane = new Pane(canvas);
     private final List<Button> legalButtons = new ArrayList<>();
@@ -68,14 +75,31 @@ public class OthelloGUI extends Application {
     @Override
     public void start(Stage primaryStage) {
         stage = primaryStage;
-        titleScene = createTitleScene();
-        gameScene = createGameScene();
+        titlePane = createTitlePane();
+        gamePane = createGamePane();
+        Button fullScreenButton = new Button();
+        fullScreenButton.textProperty().bind(Bindings.when(stage.fullScreenProperty())
+                .then("全画面を解除").otherwise("全画面表示"));
+        fullScreenButton.setOnAction(e -> toggleFullScreen());
+        StackPane.setAlignment(fullScreenButton, Pos.TOP_RIGHT);
+        StackPane.setMargin(fullScreenButton, new Insets(16));
+
+        Scene scene = new Scene(new StackPane(content, fullScreenButton), SCENE_WIDTH, SCENE_HEIGHT);
+        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F11), this::toggleFullScreen);
+        stage.setScene(scene);
         stage.setTitle("オセロ - " + AI_CLASS);
+        stage.setMinWidth(710);
+        stage.setMinHeight(490);
+        stage.setFullScreenExitHint("Esc キーで全画面を解除");
         showTitle();
         stage.show();
     }
 
-    private Scene createTitleScene() {
+    private void toggleFullScreen() {
+        stage.setFullScreen(!stage.isFullScreen());
+    }
+
+    private Parent createTitlePane() {
         Label title = new Label("オセロ");
         title.getStyleClass().add("game-title");
         Label opponent = new Label("対戦相手　" + AI_CLASS);
@@ -103,11 +127,11 @@ public class OthelloGUI extends Application {
         content.setAlignment(Pos.CENTER_LEFT);
         StackPane page = new StackPane(content);
         page.setPadding(new Insets(24, 38, 24, 38));
-        Scene scene = new Scene(page, SCENE_WIDTH, SCENE_HEIGHT);
+        page.getStyleClass().add("title-page");
         var stylesheet = OthelloGUI.class.getResource("/othello-title.css");
-        scene.getStylesheets().add(stylesheet != null ? stylesheet.toExternalForm()
+        page.getStylesheets().add(stylesheet != null ? stylesheet.toExternalForm()
                 : Path.of("othello-title.css").toUri().toString());
-        return scene;
+        return page;
     }
 
     private Button titleButton(String text, int color) {
@@ -161,9 +185,12 @@ public class OthelloGUI extends Application {
         return diagram;
     }
 
-    private Scene createGameScene() {
+    private Parent createGamePane() {
         boardPane.setMinSize(BOARD_SIZE, BOARD_SIZE);
+        boardPane.setPrefSize(BOARD_SIZE, BOARD_SIZE);
         boardPane.setMaxSize(BOARD_SIZE, BOARD_SIZE);
+        Scale boardScale = new Scale(1, 1, 0, 0);
+        boardPane.getTransforms().add(boardScale);
         for (Label label : List.of(playerLabel, stoneLabel, turnLabel, searchLabel, valueLabel)) {
             label.setStyle(LABEL_STYLE + "-fx-font-size: 17px;");
         }
@@ -180,18 +207,31 @@ public class OthelloGUI extends Application {
         HBox actions = new HBox(10, restartButton, titleButton);
         VBox turn = new VBox(4, turnLabel, searchLabel);
         VBox sidebar = new VBox(16, playerLabel, stoneLabel, turn, evaluation, actions);
-        sidebar.setPrefWidth(305);
+        double sidebarWidth = 305;
+        sidebar.setMinWidth(sidebarWidth);
+        sidebar.setPrefWidth(sidebarWidth);
         sidebar.setAlignment(Pos.CENTER_LEFT);
-        HBox gamePane = new HBox(28, boardPane, sidebar);
-        gamePane.setAlignment(Pos.CENTER);
-        gamePane.setPadding(new Insets(20));
-        gamePane.setStyle(BACKGROUND);
-        return new Scene(gamePane, SCENE_WIDTH, SCENE_HEIGHT);
+        double gap = 28;
+        double padding = 20;
+        HBox layout = new HBox(gap, new Group(boardPane), sidebar);
+        // Let the window shrink before the board scale is recalculated.
+        layout.setMinSize(0, 0);
+        layout.setAlignment(Pos.CENTER);
+        layout.setPadding(new Insets(padding));
+        layout.setStyle(BACKGROUND);
+        var scale = Bindings.createDoubleBinding(() -> {
+            double availableWidth = layout.getWidth() - sidebarWidth - gap - 2 * padding;
+            double availableHeight = layout.getHeight() - 2 * padding;
+            return Math.max(1, Math.min(availableWidth, availableHeight)) / BOARD_SIZE;
+        }, layout.widthProperty(), layout.heightProperty());
+        boardScale.xProperty().bind(scale);
+        boardScale.yProperty().bind(scale);
+        return layout;
     }
 
     private void showTitle() {
         stopAI();
-        stage.setScene(titleScene);
+        content.getChildren().setAll(titlePane);
     }
 
     private void startGame(int humanPlayer) {
@@ -202,7 +242,7 @@ public class OthelloGUI extends Application {
         playerLabel.setText(humanPlayer == Othello.BLACK ? "あなたは黒（先手）" : "あなたは白（後手）");
         restartButton.setText("最初から");
         valueLabel.setText("終局の予想石差（AI視点）  —");
-        stage.setScene(gameScene);
+        content.getChildren().setAll(gamePane);
 
         try {
             ai = new AiConnection(aiPlayer);
