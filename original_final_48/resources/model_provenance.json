@@ -1,0 +1,11 @@
+{
+  "engine": "original_final_48",
+  "source_engine": "original_13_mse",
+  "candidate": "value_13a_width48_mse_candidate_001.txt",
+  "parameter_count": 142812,
+  "parameter_sha256": "9FA0820F15356561F8A576F3C306B48F0043BBAA3782A838D2CC6105BBA1D15B",
+  "feature_schema": "exact-mobility-v1",
+  "architecture": "pattern-mlp-48x48-add8x8-v1",
+  "loss": "mse",
+  "runtime_transform": "clamp(raw, -1, 1)"
+}
