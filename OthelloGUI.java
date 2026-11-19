@@ -445,9 +445,19 @@ public class OthelloGUI extends Application {
                 throw new IOException("Could not locate the Othello application.", e);
             }
             Path modelRoot = Files.isDirectory(applicationPath) ? Path.of("") : applicationPath.getParent();
+            Path engineDirectory = modelRoot.resolve("original_final_48").toAbsolutePath();
+            Path engineClassPath = applicationPath;
+            String engineClassFile = AI_CLASS + ".class";
+            if (Files.isDirectory(applicationPath) && !Files.isRegularFile(applicationPath.resolve(engineClassFile))) {
+                // javac without -d writes the engine classes beside the engine source.
+                engineClassPath = engineDirectory;
+                if (!Files.isRegularFile(engineClassPath.resolve(engineClassFile))) {
+                    throw new IOException("Compile original_final_48/" + AI_CLASS + ".java before starting the GUI.");
+                }
+            }
             process = new ProcessBuilder(javaCommand, "-Dothello.reportSearchBudget=true",
-                    "-cp", applicationPath.toString(), AI_CLASS)
-                    .directory(modelRoot.resolve("original_final_48").toAbsolutePath().toFile())
+                    "-cp", engineClassPath.toString(), AI_CLASS)
+                    .directory(engineDirectory.toFile())
                     .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start();
             output = new BufferedReader(new InputStreamReader(process.getInputStream()));
