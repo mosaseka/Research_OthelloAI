@@ -49,6 +49,7 @@ import javax.swing.Timer;
 public class OthelloGUI {
     private static final String AI_CLASS = "OthelloAI_final_48";
     private static final int DEFAULT_AI_MOVE_TIME_MS = 3_000;
+    private static final int RESULT_DISPLAY_SECONDS = 6;
     private static final Color BACKGROUND = new Color(0x153b33);
     private static final Color BOARD_GREEN = new Color(0x16866d);
     private static final Color GRID_COLOR = new Color(0x103a30);
@@ -62,7 +63,7 @@ public class OthelloGUI {
     private final JLabel playerLabel = label("", 17, IVORY);
     private final JLabel stoneLabel = label("", 28, IVORY);
     private final JLabel turnLabel = label("", 17, IVORY);
-    private final JLabel searchLabel = label(" ", 16, IVORY);
+    private final JLabel statusDetailLabel = label(" ", 16, IVORY);
     private final JLabel valueLabel = label("", 17, IVORY);
     private final JButton restartButton = new JButton();
     private final JButton fullScreenButton = new JButton("全画面表示");
@@ -76,6 +77,7 @@ public class OthelloGUI {
     private int aiPlayer;
     private AiConnection ai;
     private Timer searchCountdown;
+    private Timer resultReturnTimer;
 
     private void show() {
         content.add(createTitlePanel(), "title");
@@ -98,6 +100,7 @@ public class OthelloGUI {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
+                cancelResultReturn();
                 stopAI();
             }
         });
@@ -166,7 +169,7 @@ public class OthelloGUI {
         guide.setOpaque(false);
         guide.add(guideColumn("石を置く", "青いマスをクリックすると石を置けます。縦・横・斜めにはさんだ相手の石が裏返ります。"));
         guide.add(guideColumn("パスと勝敗", "置ける場所がないと自動でパスします。両者とも置けなくなったら終局し、石の多い方が勝ちです。"));
-        guide.add(guideColumn("もう一局遊ぶ", "「最初から」や「再戦」で同じ色で対戦できます。「タイトルへ」で先後を選び直せます。"));
+        guide.add(guideColumn("もう一局遊ぶ", "終局後は結果を表示し、自動でタイトルに戻ります。「再戦」ですぐに同じ色で対戦できます。"));
         JLabel guideTitle = label("操作ガイド", 21, BACKGROUND);
         guideTitle.setFont(guideTitle.getFont().deriveFont(Font.BOLD));
         JPanel instructions = new JPanel(new BorderLayout(0, 8));
@@ -242,7 +245,7 @@ public class OthelloGUI {
         });
 
         JPanel details = column(playerLabel, Box.createVerticalStrut(12), stoneLabel,
-                Box.createVerticalStrut(12), turnLabel, searchLabel, Box.createVerticalStrut(12),
+                Box.createVerticalStrut(12), turnLabel, statusDetailLabel, Box.createVerticalStrut(12),
                 valueLabel, label("＋はAI有利、−はあなた有利", 13, IVORY),
                 Box.createVerticalStrut(14), actions, aiErrorButton);
         JPanel sidebar = new JPanel(new GridBagLayout());
@@ -279,11 +282,13 @@ public class OthelloGUI {
     }
 
     private void showTitle() {
+        cancelResultReturn();
         stopAI();
         pages.show(content, "title");
     }
 
     private void startGame(int humanPlayer) {
+        cancelResultReturn();
         stopAI();
         aiErrorButton.setVisible(false);
         aiPlayer = 1 - humanPlayer;
@@ -422,15 +427,44 @@ public class OthelloGUI {
     private void playTurn(String passMessage) {
         showGrid();
         if (othello.player == -1) {
-            stopAI();
-            int comparison = Integer.compare(othello.nStones[1 - aiPlayer], othello.nStones[aiPlayer]);
-            turnLabel.setText(comparison > 0 ? "あなたの勝ち" : comparison < 0 ? "AIの勝ち" : "引き分け");
-            restartButton.setText("再戦");
+            showResult();
         } else if (othello.player == aiPlayer) {
             turnLabel.setText(passMessage + "AI思考中…");
             requestAIMove();
         } else {
             turnLabel.setText(passMessage + "あなたの番");
+        }
+    }
+
+    private void showResult() {
+        stopAI();
+        int difference = othello.nStones[1 - aiPlayer] - othello.nStones[aiPlayer];
+        String result = "引き分け";
+        if (difference != 0) {
+            String winner = difference > 0 ? "あなたの勝ち" : "AIの勝ち";
+            result = winner + "（" + Math.abs(difference) + "石差）";
+        }
+        turnLabel.setText("最終結果　" + result);
+        restartButton.setText("再戦");
+        statusDetailLabel.setText(RESULT_DISPLAY_SECONDS + "秒後にタイトルへ戻ります");
+
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(RESULT_DISPLAY_SECONDS);
+        resultReturnTimer = new Timer(200, e -> {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) {
+                showTitle();
+            } else {
+                int seconds = (int) Math.ceil(remaining / 1_000_000_000.0);
+                statusDetailLabel.setText(seconds + "秒後にタイトルへ戻ります");
+            }
+        });
+        resultReturnTimer.start();
+    }
+
+    private void cancelResultReturn() {
+        if (resultReturnTimer != null) {
+            resultReturnTimer.stop();
+            resultReturnTimer = null;
         }
     }
 
@@ -449,7 +483,7 @@ public class OthelloGUI {
 
         String position = board.toString();
         AiConnection connection = ai;
-        searchLabel.setText("探索開始を待っています…");
+        statusDetailLabel.setText("探索開始を待っています…");
         new SwingWorker<AiMove, Void>() {
             @Override
             protected AiMove doInBackground() throws IOException {
@@ -494,7 +528,7 @@ public class OthelloGUI {
 
     private void updateSearchCountdown(long deadline) {
         double remainingSeconds = Math.max(0L, deadline - System.nanoTime()) / 1_000_000_000.0;
-        searchLabel.setText(String.format(Locale.ROOT, "探索上限まで 約 %.1f 秒", remainingSeconds));
+        statusDetailLabel.setText(String.format(Locale.ROOT, "探索上限まで 約 %.1f 秒", remainingSeconds));
     }
 
     private void clearSearchCountdown() {
@@ -502,7 +536,7 @@ public class OthelloGUI {
             searchCountdown.stop();
             searchCountdown = null;
         }
-        searchLabel.setText(" ");
+        statusDetailLabel.setText(" ");
     }
 
     private void showAIError(Throwable error) {
