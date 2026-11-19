@@ -1,33 +1,21 @@
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.concurrent.Task;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.AccessibleRole;
-import javafx.scene.Group;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.transform.Scale;
-import javafx.stage.Stage;
-import javafx.util.Duration;
-
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -36,202 +24,249 @@ import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongConsumer;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.Timer;
 
-public class OthelloGUI extends Application {
+public class OthelloGUI {
     private static final String AI_CLASS = "OthelloAI_final_48";
-    private static final int OFFSET = 10;
-    private static final int CELL_SIZE = 60;
-    private static final int STONE_INSET = 3;
-    private static final int BOARD_SIZE = Othello.HW * CELL_SIZE + 2 * OFFSET;
-    private static final int SCENE_WIDTH = 900;
-    private static final int SCENE_HEIGHT = 560;
-    private static final String BACKGROUND = "-fx-background-color: #153b33;";
-    private static final String LABEL_STYLE = "-fx-text-fill: white;";
+    private static final Color BACKGROUND = new Color(0x153b33);
+    private static final Color BOARD_GREEN = new Color(0x16866d);
+    private static final Color GRID_COLOR = new Color(0x103a30);
+    private static final Color LEGAL_BLUE = new Color(0x3498db);
+    private static final Color IVORY = new Color(0xf4f0e3);
 
-    private Stage stage;
-    private Parent titlePane;
-    private Parent gamePane;
-    private final StackPane content = new StackPane();
-    private final Canvas canvas = new Canvas(BOARD_SIZE, BOARD_SIZE);
-    private final Pane boardPane = new Pane(canvas);
-    private final List<Button> legalButtons = new ArrayList<>();
-    private final Label playerLabel = new Label();
-    private final Label stoneLabel = new Label();
-    private final Label turnLabel = new Label();
-    private final Label searchLabel = new Label();
-    private final Label valueLabel = new Label();
-    private final Button restartButton = new Button();
-    private Timeline searchCountdown;
+    private final JFrame frame = new JFrame("オセロ - " + AI_CLASS);
+    private final CardLayout pages = new CardLayout();
+    private final JPanel content = new JPanel(pages);
+    private final BoardPanel boardPanel = new BoardPanel();
+    private final JLabel playerLabel = label("", 17, IVORY);
+    private final JLabel stoneLabel = label("", 28, IVORY);
+    private final JLabel turnLabel = label("", 17, IVORY);
+    private final JLabel searchLabel = label(" ", 16, IVORY);
+    private final JLabel valueLabel = label("", 17, IVORY);
+    private final JButton restartButton = new JButton();
+    private final JButton fullScreenButton = new JButton("全画面表示");
 
+    private boolean fullScreen;
+    private Rectangle windowedBounds;
+    private int windowedState;
     private Othello othello;
     private int aiPlayer;
     private AiConnection ai;
+    private Timer searchCountdown;
 
-    @Override
-    public void start(Stage primaryStage) {
-        stage = primaryStage;
-        titlePane = createTitlePane();
-        gamePane = createGamePane();
-        Button fullScreenButton = new Button();
-        fullScreenButton.textProperty().bind(Bindings.when(stage.fullScreenProperty())
-                .then("全画面を解除").otherwise("全画面表示"));
-        fullScreenButton.setOnAction(e -> toggleFullScreen());
-        StackPane.setAlignment(fullScreenButton, Pos.TOP_RIGHT);
-        StackPane.setMargin(fullScreenButton, new Insets(16));
+    private void show() {
+        content.add(createTitlePanel(), "title");
+        content.add(createGamePanel(), "game");
+        fullScreenButton.setToolTipText("F11 で切り替え、Esc で解除");
+        fullScreenButton.addActionListener(e -> toggleFullScreen());
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(BACKGROUND);
+        header.setBorder(BorderFactory.createEmptyBorder(12, 18, 0, 18));
+        header.add(fullScreenButton, BorderLayout.LINE_END);
+        frame.add(header, BorderLayout.NORTH);
+        frame.add(content, BorderLayout.CENTER);
+        bindKey(KeyEvent.VK_F11, "fullscreen", this::toggleFullScreen);
+        bindKey(KeyEvent.VK_ESCAPE, "exitFullscreen", () -> {
+            if (fullScreen) {
+                toggleFullScreen();
+            }
+        });
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                stopAI();
+            }
+        });
+        frame.setMinimumSize(new Dimension(720, 510));
+        frame.setSize(900, 600);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
 
-        Scene scene = new Scene(new StackPane(content, fullScreenButton), SCENE_WIDTH, SCENE_HEIGHT);
-        scene.getAccelerators().put(new KeyCodeCombination(KeyCode.F11), this::toggleFullScreen);
-        stage.setScene(scene);
-        stage.setTitle("オセロ - " + AI_CLASS);
-        stage.setMinWidth(710);
-        stage.setMinHeight(490);
-        stage.setFullScreenExitHint("Esc キーで全画面を解除");
-        showTitle();
-        stage.show();
+    private void bindKey(int key, String name, Runnable action) {
+        var root = frame.getRootPane();
+        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(key, 0), name);
+        root.getActionMap().put(name, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                action.run();
+            }
+        });
     }
 
     private void toggleFullScreen() {
-        stage.setFullScreen(!stage.isFullScreen());
+        // Recreate the native window's decorations without replacing its content or the game.
+        Rectangle screenBounds = frame.getGraphicsConfiguration().getBounds();
+        if (!fullScreen) {
+            windowedBounds = frame.getBounds();
+            windowedState = frame.getExtendedState();
+        }
+        frame.dispose();
+        fullScreen = !fullScreen;
+        frame.setExtendedState(JFrame.NORMAL);
+        frame.setUndecorated(fullScreen);
+        frame.setBounds(fullScreen ? screenBounds : windowedBounds);
+        if (!fullScreen) {
+            frame.setExtendedState(windowedState);
+        }
+        fullScreenButton.setText(fullScreen ? "全画面を解除" : "全画面表示");
+        frame.setVisible(true);
     }
 
-    private Parent createTitlePane() {
-        Label title = new Label("オセロ");
-        title.getStyleClass().add("game-title");
-        Label opponent = new Label("対戦相手　" + AI_CLASS);
-        opponent.getStyleClass().add("opponent");
-        HBox choices = new HBox(10, titleButton("先手（黒）で対戦", Othello.BLACK),
-                titleButton("後手（白）で対戦", Othello.WHITE));
-        VBox.setMargin(choices, new Insets(18, 0, 0, 0));
-        VBox heading = new VBox(6, title, opponent, choices);
-        heading.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(heading, Priority.ALWAYS);
-        HBox hero = new HBox(24, heading, openingDiagram());
-        hero.setAlignment(Pos.CENTER_LEFT);
+    private JPanel createTitlePanel() {
+        JPanel page = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics graphics) {
+                super.paintComponent(graphics);
+                Graphics2D g = (Graphics2D) graphics.create();
+                g.setPaint(new GradientPaint(0, 0, BACKGROUND, getWidth(), getHeight(), new Color(0x25483a)));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.dispose();
+            }
+        };
 
-        Label guideTitle = new Label("操作ガイド");
-        guideTitle.getStyleClass().add("guide-title");
-        HBox guide = new HBox(24,
-                guideColumn("石を置く", "青いマスをクリックします。縦・横・斜めにはさんだ相手の石が裏返ります。"),
-                guideColumn("パスと勝敗", "置ける場所がないと自動でパス。両者とも置けなくなったら終局し、石の多い方が勝ちです。"),
-                guideColumn("もう一局遊ぶ", "対局中は「最初から」、終局後は「再戦」で同じ色で遊べます。「タイトルへ」で先後を選び直せます。"));
-        VBox instructions = new VBox(14, guideTitle, guide);
-        instructions.getStyleClass().add("guide");
+        JLabel title = label("オセロ", 58, IVORY);
+        title.setFont(new Font(Font.SERIF, Font.BOLD, 58));
+        JLabel opponent = label("対戦相手　" + AI_CLASS, 15, new Color(0xc9d7c6));
+        JPanel choices = new JPanel(new GridLayout(1, 2, 10, 0));
+        choices.setOpaque(false);
+        choices.add(titleButton("先手（黒）で対戦", Othello.BLACK));
+        choices.add(titleButton("後手（白）で対戦", Othello.WHITE));
+        JPanel heading = column(title, opponent, Box.createVerticalStrut(18), choices);
+        JPanel hero = new JPanel(new BorderLayout(42, 0));
+        hero.setOpaque(false);
+        hero.add(heading, BorderLayout.CENTER);
+        hero.add(openingDiagram(), BorderLayout.EAST);
 
-        VBox content = new VBox(32, hero, instructions);
-        content.setMaxWidth(850);
-        content.setAlignment(Pos.CENTER_LEFT);
-        StackPane page = new StackPane(content);
-        page.setPadding(new Insets(24, 38, 24, 38));
-        page.getStyleClass().add("title-page");
-        var stylesheet = OthelloGUI.class.getResource("/othello-title.css");
-        page.getStylesheets().add(stylesheet != null ? stylesheet.toExternalForm()
-                : Path.of("othello-title.css").toUri().toString());
+        JPanel guide = new JPanel(new GridLayout(1, 3, 18, 0));
+        guide.setOpaque(false);
+        guide.add(guideColumn("石を置く", "青いマスをクリックすると石を置けます。縦・横・斜めにはさんだ相手の石が裏返ります。"));
+        guide.add(guideColumn("パスと勝敗", "置ける場所がないと自動でパスします。両者とも置けなくなったら終局し、石の多い方が勝ちです。"));
+        guide.add(guideColumn("もう一局遊ぶ", "「最初から」や「再戦」で同じ色で対戦できます。「タイトルへ」で先後を選び直せます。"));
+        JLabel guideTitle = label("操作ガイド", 21, BACKGROUND);
+        guideTitle.setFont(guideTitle.getFont().deriveFont(Font.BOLD));
+        JPanel instructions = new JPanel(new BorderLayout(0, 8));
+        instructions.setBackground(IVORY);
+        instructions.setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
+        instructions.add(guideTitle, BorderLayout.NORTH);
+        instructions.add(guide, BorderLayout.CENTER);
+
+        JPanel layout = column(hero, Box.createVerticalStrut(24), instructions);
+        layout.setPreferredSize(new Dimension(650, layout.getPreferredSize().height));
+        page.add(layout);
         return page;
     }
 
-    private Button titleButton(String text, int color) {
-        Button button = new Button(text);
-        button.setGraphic(new Circle(7,
-                color == Othello.BLACK ? Color.web("#192d27") : Color.web("#faf6e9")));
-        button.getStyleClass().add(color == Othello.BLACK ? "black-choice" : "white-choice");
-        button.setOnAction(e -> startGame(color));
+    private JButton titleButton(String text, int color) {
+        JButton button = new JButton(text);
+        button.setMargin(new Insets(10, 14, 10, 14));
+        button.setBackground(color == Othello.BLACK ? IVORY : new Color(0x31574b));
+        button.setForeground(color == Othello.BLACK ? BACKGROUND : IVORY);
+        button.addActionListener(e -> startGame(color));
         return button;
     }
 
-    private VBox guideColumn(String heading, String description) {
-        Label name = new Label(heading);
-        name.getStyleClass().add("guide-heading");
-        Label body = new Label(description);
-        body.getStyleClass().add("guide-body");
-        body.setWrapText(true);
-        VBox column = new VBox(6, name, body);
-        column.setPrefWidth(230);
-        column.setMinWidth(0);
-        HBox.setHgrow(column, Priority.ALWAYS);
+    private JPanel guideColumn(String heading, String description) {
+        JLabel name = label(heading, 15, BACKGROUND);
+        name.setFont(name.getFont().deriveFont(Font.BOLD));
+        JTextArea body = new JTextArea(description, 5, 15);
+        body.setOpaque(false);
+        body.setEditable(false);
+        body.setFocusable(false);
+        body.setLineWrap(true);
+        body.setWrapStyleWord(true);
+        body.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        body.setForeground(new Color(0x374a40));
+        JPanel column = new JPanel(new BorderLayout(0, 5));
+        column.setOpaque(false);
+        column.add(name, BorderLayout.NORTH);
+        column.add(body, BorderLayout.CENTER);
         return column;
     }
 
-    private Canvas openingDiagram() {
-        int cell = 22;
-        int frame = 6;
-        int size = 2 * frame + Othello.HW * cell;
-        Canvas diagram = new Canvas(size, size);
-        diagram.setAccessibleRole(AccessibleRole.IMAGE_VIEW);
-        diagram.setAccessibleText("初期盤面。青い4マスに黒を置けます。");
-        diagram.getStyleClass().add("opening-diagram");
-        GraphicsContext g = diagram.getGraphicsContext2D();
-        g.setFill(Color.web("#a8b08b"));
-        g.fillRoundRect(0, 0, size, size, 8, 8);
+    private JPanel openingDiagram() {
         Othello opening = new Othello();
         opening.checkLegal();
-        for (int y = 0; y < Othello.HW; y++) {
-            for (int x = 0; x < Othello.HW; x++) {
-                int left = frame + x * cell;
-                int top = frame + y * cell;
-                int square = opening.grid[y][x];
-                g.setFill(Color.web(square == Othello.LEGAL ? "#3498db" : "#23604e"));
-                g.fillRect(left, top, cell - 1, cell - 1);
-                if (square == Othello.BLACK || square == Othello.WHITE) {
-                    g.setFill(square == Othello.BLACK ? Color.web("#14251f") : Color.web("#faf6e9"));
-                    g.fillOval(left + 2, top + 2, cell - 5, cell - 5);
-                }
+        JPanel diagram = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics graphics) {
+                super.paintComponent(graphics);
+                drawPosition(graphics, boardBounds(getWidth(), getHeight()), opening, true);
             }
-        }
+        };
+        diagram.setOpaque(false);
+        diagram.setPreferredSize(new Dimension(188, 188));
+        diagram.getAccessibleContext().setAccessibleName("初期盤面。青い4マスに黒を置けます。");
         return diagram;
     }
 
-    private Parent createGamePane() {
-        boardPane.setMinSize(BOARD_SIZE, BOARD_SIZE);
-        boardPane.setPrefSize(BOARD_SIZE, BOARD_SIZE);
-        boardPane.setMaxSize(BOARD_SIZE, BOARD_SIZE);
-        Scale boardScale = new Scale(1, 1, 0, 0);
-        boardPane.getTransforms().add(boardScale);
-        for (Label label : List.of(playerLabel, stoneLabel, turnLabel, searchLabel, valueLabel)) {
-            label.setStyle(LABEL_STYLE + "-fx-font-size: 17px;");
+    private JPanel createGamePanel() {
+        restartButton.addActionListener(e -> startGame(1 - aiPlayer));
+        JButton titleButton = new JButton("タイトルへ");
+        titleButton.addActionListener(e -> showTitle());
+        JPanel actions = new JPanel(new GridLayout(1, 2, 8, 0));
+        actions.setOpaque(false);
+        actions.add(restartButton);
+        actions.add(titleButton);
+
+        JPanel details = column(playerLabel, Box.createVerticalStrut(12), stoneLabel,
+                Box.createVerticalStrut(12), turnLabel, searchLabel, Box.createVerticalStrut(12),
+                valueLabel, label("＋はAI有利、−はあなた有利", 13, IVORY),
+                Box.createVerticalStrut(14), actions);
+        JPanel sidebar = new JPanel(new GridBagLayout());
+        sidebar.setOpaque(false);
+        sidebar.setPreferredSize(new Dimension(310, 1));
+        sidebar.add(details);
+
+        JPanel panel = new JPanel(new BorderLayout(24, 0));
+        panel.setBackground(BACKGROUND);
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 22, 22, 22));
+        panel.add(boardPanel, BorderLayout.CENTER);
+        panel.add(sidebar, BorderLayout.EAST);
+        return panel;
+    }
+
+    private static JLabel label(String text, int fontSize, Color color) {
+        JLabel label = new JLabel(text);
+        label.setForeground(color);
+        label.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, fontSize));
+        return label;
+    }
+
+    private static JPanel column(Component... children) {
+        JPanel result = new JPanel();
+        result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
+        result.setOpaque(false);
+        for (Component child : children) {
+            if (child instanceof JComponent component) {
+                component.setAlignmentX(JComponent.LEFT_ALIGNMENT);
+            }
+            result.add(child);
         }
-        stoneLabel.setStyle(LABEL_STYLE + "-fx-font-size: 30px;");
-        turnLabel.setWrapText(true);
-        Label valueGuide = new Label("＋はAI有利、−はあなた有利");
-        valueGuide.setStyle(LABEL_STYLE + "-fx-font-size: 13px;");
-        VBox evaluation = new VBox(4, valueLabel, valueGuide);
-
-        restartButton.setOnAction(e -> startGame(1 - aiPlayer));
-        Button titleButton = new Button("タイトルへ");
-        titleButton.setOnAction(e -> showTitle());
-
-        HBox actions = new HBox(10, restartButton, titleButton);
-        VBox turn = new VBox(4, turnLabel, searchLabel);
-        VBox sidebar = new VBox(16, playerLabel, stoneLabel, turn, evaluation, actions);
-        double sidebarWidth = 305;
-        sidebar.setMinWidth(sidebarWidth);
-        sidebar.setPrefWidth(sidebarWidth);
-        sidebar.setAlignment(Pos.CENTER_LEFT);
-        double gap = 28;
-        double padding = 20;
-        HBox layout = new HBox(gap, new Group(boardPane), sidebar);
-        // Let the window shrink before the board scale is recalculated.
-        layout.setMinSize(0, 0);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(padding));
-        layout.setStyle(BACKGROUND);
-        var scale = Bindings.createDoubleBinding(() -> {
-            double availableWidth = layout.getWidth() - sidebarWidth - gap - 2 * padding;
-            double availableHeight = layout.getHeight() - 2 * padding;
-            return Math.max(1, Math.min(availableWidth, availableHeight)) / BOARD_SIZE;
-        }, layout.widthProperty(), layout.heightProperty());
-        boardScale.xProperty().bind(scale);
-        boardScale.yProperty().bind(scale);
-        return layout;
+        return result;
     }
 
     private void showTitle() {
         stopAI();
-        content.getChildren().setAll(titlePane);
+        pages.show(content, "title");
     }
 
     private void startGame(int humanPlayer) {
@@ -242,7 +277,7 @@ public class OthelloGUI extends Application {
         playerLabel.setText(humanPlayer == Othello.BLACK ? "あなたは黒（先手）" : "あなたは白（後手）");
         restartButton.setText("最初から");
         valueLabel.setText("終局の予想石差（AI視点）  —");
-        content.getChildren().setAll(gamePane);
+        pages.show(content, "game");
 
         try {
             ai = new AiConnection(aiPlayer);
@@ -250,11 +285,6 @@ public class OthelloGUI extends Application {
         } catch (IOException e) {
             showAIError(e);
         }
-    }
-
-    @Override
-    public void stop() {
-        stopAI();
     }
 
     private void stopAI() {
@@ -265,51 +295,97 @@ public class OthelloGUI extends Application {
         }
     }
 
-    private void drawBoard() {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill(Color.web("#16866d"));
-        gc.fillRect(0, 0, BOARD_SIZE, BOARD_SIZE);
-
-        gc.setStroke(Color.web("#103a30"));
-        gc.setLineWidth(2);
-        for (int y = 0; y < Othello.HW; y++) {
-            for (int x = 0; x < Othello.HW; x++) {
-                gc.strokeRect(OFFSET + CELL_SIZE * x, OFFSET + CELL_SIZE * y, CELL_SIZE, CELL_SIZE);
-            }
-        }
+    private static Rectangle boardBounds(int width, int height) {
+        int size = Math.min(width, height) / Othello.HW * Othello.HW;
+        return new Rectangle((width - size) / 2, (height - size) / 2, size, size);
     }
 
-    private void showGrid() {
-        boardPane.getChildren().removeAll(legalButtons);
-        legalButtons.clear();
-        drawBoard();
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        int stoneSize = CELL_SIZE - STONE_INSET * 2;
-
-        for (int y = 0; y < Othello.HW; y++) {
-            for (int x = 0; x < Othello.HW; x++) {
-                int cell = othello.grid[y][x];
-                int left = OFFSET + CELL_SIZE * x + STONE_INSET;
-                int top = OFFSET + CELL_SIZE * y + STONE_INSET;
+    private static void drawPosition(Graphics graphics, Rectangle area, Othello position, boolean markLegal) {
+        Graphics2D g = (Graphics2D) graphics.create();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(BOARD_GREEN);
+        g.fillRect(area.x, area.y, area.width, area.height);
+        int cellSize = area.width / Othello.HW;
+        int inset = Math.max(2, cellSize / 16);
+        for (int row = 0; row < Othello.HW; row++) {
+            for (int column = 0; column < Othello.HW; column++) {
+                int x = area.x + column * cellSize;
+                int y = area.y + row * cellSize;
+                g.setColor(GRID_COLOR);
+                g.drawRect(x, y, cellSize - 1, cellSize - 1);
+                int cell = position.grid[row][column];
                 if (cell == Othello.BLACK || cell == Othello.WHITE) {
-                    gc.setFill(cell == Othello.BLACK ? Color.BLACK : Color.WHITE);
-                    gc.fillOval(left, top, stoneSize, stoneSize);
-                } else if (cell == Othello.LEGAL && ai != null && othello.player != aiPlayer) {
-                    Button button = new Button();
-                    button.setPrefSize(stoneSize, stoneSize);
-                    button.setStyle("-fx-background-color: #3498db;");
-                    button.setLayoutX(left);
-                    button.setLayoutY(top);
-                    button.setAccessibleText("" + (char) ('A' + x) + (y + 1));
-                    final int row = y;
-                    final int column = x;
-                    button.setOnAction(e -> handleMove(row, column));
-                    legalButtons.add(button);
-                    boardPane.getChildren().add(button);
+                    g.setColor(cell == Othello.BLACK ? new Color(0x12221d) : IVORY);
+                    g.fillOval(x + inset, y + inset, cellSize - 2 * inset, cellSize - 2 * inset);
+                } else if (markLegal && cell == Othello.LEGAL) {
+                    g.setColor(LEGAL_BLUE);
+                    g.fillRect(x + inset, y + inset, cellSize - 2 * inset, cellSize - 2 * inset);
+                }
+            }
+        }
+        g.dispose();
+    }
+
+    private final class BoardPanel extends JPanel {
+        private final JButton[][] moves = new JButton[Othello.HW][Othello.HW];
+
+        BoardPanel() {
+            super(null);
+            setOpaque(false);
+            for (int y = 0; y < Othello.HW; y++) {
+                for (int x = 0; x < Othello.HW; x++) {
+                    int row = y;
+                    int column = x;
+                    JButton move = new JButton();
+                    move.setBackground(LEGAL_BLUE);
+                    move.setBorderPainted(false);
+                    move.getAccessibleContext().setAccessibleName("" + (char) ('A' + x) + (y + 1));
+                    move.addActionListener(e -> {
+                        if (ai != null && othello.player != aiPlayer && othello.grid[row][column] == Othello.LEGAL) {
+                            handleMove(row, column);
+                        }
+                    });
+                    move.setVisible(false);
+                    moves[y][x] = move;
+                    add(move);
                 }
             }
         }
 
+        @Override
+        public void doLayout() {
+            Rectangle area = boardBounds(getWidth(), getHeight());
+            int cell = area.width / Othello.HW;
+            int inset = Math.max(2, cell / 16);
+            for (int y = 0; y < Othello.HW; y++) {
+                for (int x = 0; x < Othello.HW; x++) {
+                    moves[y][x].setBounds(area.x + x * cell + inset, area.y + y * cell + inset,
+                            cell - 2 * inset, cell - 2 * inset);
+                }
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+            if (othello != null) {
+                drawPosition(graphics, boardBounds(getWidth(), getHeight()), othello, false);
+            }
+        }
+
+        void refresh() {
+            boolean humanTurn = ai != null && othello.player >= 0 && othello.player != aiPlayer;
+            for (int y = 0; y < Othello.HW; y++) {
+                for (int x = 0; x < Othello.HW; x++) {
+                    moves[y][x].setVisible(humanTurn && othello.grid[y][x] == Othello.LEGAL);
+                }
+            }
+            repaint();
+        }
+    }
+
+    private void showGrid() {
+        boardPanel.refresh();
         stoneLabel.setText("黒 " + othello.nStones[Othello.BLACK] + "  ・  白 " + othello.nStones[Othello.WHITE]);
     }
 
@@ -359,48 +435,46 @@ public class OthelloGUI extends Application {
         String position = board.toString();
         AiConnection connection = ai;
         searchLabel.setText("探索開始を待っています…");
-        Task<AiMove> task = new Task<>() {
+        new SwingWorker<AiMove, Void>() {
             @Override
-            protected AiMove call() throws IOException {
-                return connection.play(position, deadline -> Platform.runLater(() -> {
+            protected AiMove doInBackground() throws IOException {
+                return connection.play(position, deadline -> SwingUtilities.invokeLater(() -> {
                     if (ai == connection) {
                         startSearchCountdown(deadline);
                     }
                 }));
             }
-        };
-        task.setOnSucceeded(e -> {
-            // A return to the title or a restart may have replaced this game.
-            if (ai != connection) {
-                return;
-            }
-            clearSearchCountdown();
-            AiMove move = task.getValue();
-            if (!Othello.inside(move.y(), move.x()) || othello.grid[move.y()][move.x()] != Othello.LEGAL) {
-                showAIError(new IOException("Illegal move from AI: " + move));
-                return;
-            }
-            valueLabel.setText(String.format(Locale.ROOT, "終局の予想石差（AI視点）  %+.2f 石", move.value()));
-            handleMove(move.y(), move.x());
-        });
-        task.setOnFailed(e -> {
-            if (ai == connection) {
-                showAIError(task.getException());
-            }
-        });
 
-        Thread worker = new Thread(task, "othello-ai-move");
-        worker.setDaemon(true);
-        worker.start();
+            @Override
+            protected void done() {
+                if (ai != connection) {
+                    return;
+                }
+                clearSearchCountdown();
+                try {
+                    AiMove move = get();
+                    if (!Othello.inside(move.y(), move.x()) || othello.grid[move.y()][move.x()] != Othello.LEGAL) {
+                        throw new IOException("Illegal move from AI: " + move);
+                    }
+                    valueLabel.setText(String.format(Locale.ROOT, "終局の予想石差（AI視点）  %+.2f 石", move.value()));
+                    handleMove(move.y(), move.x());
+                } catch (ExecutionException e) {
+                    showAIError(e.getCause());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    showAIError(e);
+                } catch (IOException e) {
+                    showAIError(e);
+                }
+            }
+        }.execute();
     }
 
     private void startSearchCountdown(long deadline) {
         clearSearchCountdown();
         updateSearchCountdown(deadline);
-        searchCountdown = new Timeline(new KeyFrame(Duration.millis(100),
-                e -> updateSearchCountdown(deadline)));
-        searchCountdown.setCycleCount(Animation.INDEFINITE);
-        searchCountdown.play();
+        searchCountdown = new Timer(100, e -> updateSearchCountdown(deadline));
+        searchCountdown.start();
     }
 
     private void updateSearchCountdown(long deadline) {
@@ -413,14 +487,14 @@ public class OthelloGUI extends Application {
             searchCountdown.stop();
             searchCountdown = null;
         }
-        searchLabel.setText("");
+        searchLabel.setText(" ");
     }
 
     private void showAIError(Throwable error) {
         System.err.println("AI error: " + error.getMessage());
         stopAI();
         showGrid();
-        turnLabel.setText("AIとの通信に失敗しました。「最初から」で対戦をやり直せます。");
+        turnLabel.setText("<html>AIとの通信に失敗しました。<br>「最初から」で対戦をやり直せます。</html>");
     }
 
     private record AiMove(int y, int x, double value) {}
@@ -495,6 +569,6 @@ public class OthelloGUI extends Application {
     }
 
     public static void main(String[] args) {
-        launch(args);
+        SwingUtilities.invokeLater(() -> new OthelloGUI().show());
     }
 }

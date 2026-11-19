@@ -21,19 +21,22 @@
 
 ## GUIで対戦する
 
-WindowsとLinuxで同じ対戦用JARを使えます。ビルドにはJDK 25、起動にはJava 25と、OS・CPUに合った[JavaFX 25 SDK](https://gluonhq.com/products/javafx/)が必要です。Linuxではグラフィカルなデスクトップ環境と[GTK 3.20以降](https://openjfx.io/highlights/25/)も必要です。
+GUIはJava標準のSwingで動きます。WindowsとLinuxで同じ対戦用JARを使えます。ビルドにはJDK 17以降、JARの起動にはJava 17以降とグラフィカルなデスクトップ環境が必要です。
 
-- **Windows**では `run.vbs` をダブルクリックすると、コンソールを表示せずに起動します。端末からは `.\run.bat` でも起動できます。JavaFX SDKを既定の `C:\Program Files\Java\javafx-sdk-25` 以外に置いた場合は、環境変数 `JAVAFX_LIB` にSDKの `lib` フォルダの絶対パスを設定してください。
-- **Linux**では、展開したSDKへのパスを指定して実行します。
-
-  ```sh
-  JAVAFX_LIB="$HOME/javafx-sdk-25/lib" sh run.sh
-  ```
+- **Windows**では `run.vbs` をダブルクリックすると、コンソールを表示せずに起動します。端末からは `.\run.bat` でも起動できます。
+- **Linux**では、リポジトリ直下で `sh run.sh` を実行します。
 
 ビルドだけ行う場合は、`run.bat --build-only` または `sh run.sh --build-only` を使います。別のPCへ移すときは `build/othello_gui/dist/` を丸ごとコピーしてください。このフォルダに `othello.jar` とAIのモデルが入ります。移動先で、このフォルダから次のコマンドで起動できます。
 
 ```text
-java --enable-native-access=javafx.graphics,ALL-UNNAMED --module-path "<JavaFX SDKのlibフォルダ>" --add-modules javafx.controls -jar othello.jar
+java -jar othello.jar
+```
+
+手動でコンパイル・起動する場合は、リポジトリ直下で実行します。
+
+```sh
+javac -encoding UTF-8 -d . Othello.java OthelloGUI.java original_final_48/OthelloAI_final_48.java
+java OthelloGUI
 ```
 
 タイトル画面と対局画面の右上にある「全画面表示」ボタン、または `F11` キーで全画面に切り替えられます。全画面を解除するには `Esc` キー、`F11` キー、または「全画面を解除」ボタンを使います。
