@@ -24,7 +24,7 @@
 GUIはJava標準のSwingで動きます。WindowsとLinuxで同じ対戦用JARを使えます。ビルドにはJDK 17以降、JARの起動にはJava 17以降とグラフィカルなデスクトップ環境が必要です。
 
 - **Windows**では `run.vbs` をダブルクリックすると、コンソールを表示せずに起動します。端末からは `.\run.bat` でも起動できます。
-- **Linux**では、リポジトリ直下で `sh run.sh` を実行します。
+- **Linux**では、リポジトリ直下で `./run.sh` を実行します。`sh run.sh` でも起動できます。
 
 ビルドだけ行う場合は、`run.bat --build-only` または `sh run.sh --build-only` を使います。別のPCへ移すときは `build/othello_gui/dist/` を丸ごとコピーしてください。このフォルダに `othello.jar` とAIのモデルが入ります。移動先で、このフォルダから次のコマンドで起動できます。
 
