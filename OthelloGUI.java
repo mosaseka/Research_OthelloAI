@@ -24,6 +24,7 @@ import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +37,9 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -62,6 +65,8 @@ public class OthelloGUI {
     private final JLabel valueLabel = label("", 17, IVORY);
     private final JButton restartButton = new JButton();
     private final JButton fullScreenButton = new JButton("全画面表示");
+    private final JButton aiErrorButton = new JButton("エラーの詳細");
+    private String aiErrorDetails;
 
     private boolean fullScreen;
     private Rectangle windowedBounds;
@@ -226,11 +231,19 @@ public class OthelloGUI {
         actions.setOpaque(false);
         actions.add(restartButton);
         actions.add(titleButton);
+        aiErrorButton.setVisible(false);
+        aiErrorButton.addActionListener(e -> {
+            JTextArea details = new JTextArea(aiErrorDetails, 12, 55);
+            details.setEditable(false);
+            details.setCaretPosition(0);
+            JOptionPane.showMessageDialog(frame, new JScrollPane(details),
+                    "AIのエラー", JOptionPane.ERROR_MESSAGE);
+        });
 
         JPanel details = column(playerLabel, Box.createVerticalStrut(12), stoneLabel,
                 Box.createVerticalStrut(12), turnLabel, searchLabel, Box.createVerticalStrut(12),
                 valueLabel, label("＋はAI有利、−はあなた有利", 13, IVORY),
-                Box.createVerticalStrut(14), actions);
+                Box.createVerticalStrut(14), actions, aiErrorButton);
         JPanel sidebar = new JPanel(new GridBagLayout());
         sidebar.setOpaque(false);
         sidebar.setPreferredSize(new Dimension(310, 1));
@@ -271,6 +284,7 @@ public class OthelloGUI {
 
     private void startGame(int humanPlayer) {
         stopAI();
+        aiErrorButton.setVisible(false);
         aiPlayer = 1 - humanPlayer;
         othello = new Othello();
         othello.checkLegal();
@@ -492,9 +506,15 @@ public class OthelloGUI {
 
     private void showAIError(Throwable error) {
         System.err.println("AI error: " + error.getMessage());
+        aiErrorDetails = error.toString();
+        String diagnostics = ai == null ? "" : ai.diagnostics();
+        if (!diagnostics.isEmpty()) {
+            aiErrorDetails += "\n\n" + diagnostics;
+        }
         stopAI();
         showGrid();
         turnLabel.setText("<html>AIとの通信に失敗しました。<br>「最初から」で対戦をやり直せます。</html>");
+        aiErrorButton.setVisible(true);
     }
 
     private record AiMove(int y, int x, double value) {}
@@ -503,6 +523,8 @@ public class OthelloGUI {
         private final Process process;
         private final BufferedReader output;
         private final BufferedWriter input;
+        private final ArrayDeque<String> recentErrors = new ArrayDeque<>();
+        private final Thread errorReader;
         private final int player;
         private boolean ready;
 
@@ -532,16 +554,54 @@ public class OthelloGUI {
             process = new ProcessBuilder(javaCommand, "-Dothello.reportSearchBudget=true",
                     "-cp", engineClassPath.toString(), AI_CLASS)
                     .directory(engineDirectory.toFile())
-                    .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start();
             output = new BufferedReader(new InputStreamReader(process.getInputStream()));
             input = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+            errorReader = new Thread(this::readErrors, "othello-ai-stderr");
+            errorReader.setDaemon(true);
+            errorReader.start();
+        }
+
+        private void readErrors() {
+            try (BufferedReader errors = process.errorReader()) {
+                String line;
+                while ((line = errors.readLine()) != null) {
+                    synchronized (recentErrors) {
+                        if (recentErrors.size() == 30) {
+                            recentErrors.removeFirst();
+                        }
+                        recentErrors.addLast(line);
+                    }
+                    System.err.println(line);
+                }
+            } catch (IOException ignored) {
+                // Destroying the AI on restart or exit can close its error stream.
+            }
+        }
+
+        String diagnostics() {
+            synchronized (recentErrors) {
+                return String.join("\n", recentErrors);
+            }
+        }
+
+        private IOException processExited(String message) {
+            try {
+                errorReader.join(250);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return new IOException(message);
         }
 
         AiMove play(String position, LongConsumer onSearchStarted) throws IOException {
             if (!ready) {
-                if (!"READY".equals(output.readLine())) {
-                    throw new IOException("The AI did not finish initialization.");
+                String response = output.readLine();
+                if (response == null) {
+                    throw processExited("The AI exited before initialization completed.");
+                }
+                if (!"READY".equals(response)) {
+                    throw new IOException("Unexpected AI initialization response: " + response);
                 }
                 input.write(player + "\n");
                 input.flush();
@@ -558,7 +618,7 @@ public class OthelloGUI {
                 line = output.readLine();
             }
             if (line == null) {
-                throw new IOException("The AI process exited.");
+                throw processExited("The AI process exited.");
             }
             String[] parts = line.trim().split("\\s+");
             if (parts.length != 3) {

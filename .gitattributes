@@ -1,1 +1,3 @@
 run.sh text eol=lf
+# The model manifest verifies the exact bytes, including CRLF line endings.
+original_final_48/resources/value_param.txt -text whitespace=cr-at-eol
