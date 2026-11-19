@@ -37,6 +37,8 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -153,7 +155,10 @@ public class OthelloGUI {
         choices.setOpaque(false);
         choices.add(titleButton("先手（黒）で対戦", Othello.BLACK));
         choices.add(titleButton("後手（白）で対戦", Othello.WHITE));
-        JPanel heading = column(title, opponent, Box.createVerticalStrut(18), choices);
+        JButton algorithm = pageButton("AIのアルゴリズム", false);
+        algorithm.addActionListener(e -> showAlgorithmDialog());
+        JPanel heading = column(title, opponent, Box.createVerticalStrut(18), choices,
+                Box.createVerticalStrut(8), algorithm);
         JPanel hero = new JPanel(new BorderLayout(42, 0));
         hero.setOpaque(false);
         hero.add(heading, BorderLayout.CENTER);
@@ -181,6 +186,55 @@ public class OthelloGUI {
             instructions.setBorder(BorderFactory.createEmptyBorder(
                     verticalPadding, horizontalPadding, verticalPadding, horizontalPadding));
         });
+    }
+
+    private void showAlgorithmDialog() {
+        JDialog dialog = new JDialog(frame, "AIのアルゴリズム", true);
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        JEditorPane explanation = new JEditorPane();
+        explanation.setEditable(false);
+        explanation.setContentType("text/html");
+        explanation.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
+        explanation.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 16));
+        explanation.setBackground(IVORY);
+        explanation.setForeground(BACKGROUND);
+        explanation.setBorder(BorderFactory.createEmptyBorder(8, 22, 16, 22));
+        explanation.getAccessibleContext().setAccessibleName("AIの着手の選び方");
+        explanation.setText("""
+                <html><body>
+                <h2>AIはどうやって一手を選ぶ？</h2>
+                <h3>相手の返し手まで読む</h3>
+                <p>AIは石を置けるマスを調べ、それぞれに置いた後、相手がどう返せるかを読みます。
+                今たくさんの石を返せても、次に相手が角を取れるなら、別の手のほうが有利かもしれません。</p>
+                <h3>時間内に少しずつ深く読む</h3>
+                <p>まず浅く読み、有望な手から先に、読みを一手ずつ深くします（反復深化）。
+                すでに見つけた手を上回れないと分かった変化は、そこで打ち切ります（αβ枝刈り）。</p>
+                <h3>盤面から終局の石差を見積もる</h3>
+                <p>最後まで読めない局面では、学習済みの評価関数が石の並びなどから終局の石差を予測します。
+                空きマスが少なくなると、時間の許す範囲で終局まで読みます。</p>
+                <h3>対戦画面の評価値を読む</h3>
+                <p>「終局の予想石差」はAIから見た予測です。たとえば「+4.00 石」ならAIが約4石多く、
+                「−4.00 石」ならあなたが約4石多く終えるという読みです。</p>
+                </body></html>
+                """);
+        explanation.setCaretPosition(0);
+        JScrollPane scroll = new JScrollPane(explanation);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        dialog.add(scroll, BorderLayout.CENTER);
+
+        JButton close = pageButton("タイトルに戻る", true);
+        close.addActionListener(e -> dialog.dispose());
+        JPanel footer = new JPanel();
+        footer.setBackground(BACKGROUND);
+        footer.add(close);
+        dialog.add(footer, BorderLayout.SOUTH);
+        dialog.getRootPane().setDefaultButton(close);
+        dialog.getRootPane().registerKeyboardAction(e -> dialog.dispose(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+        dialog.setSize(Math.min(680, frame.getWidth()), Math.min(560, frame.getHeight()));
+        dialog.setLocationRelativeTo(frame);
+        dialog.setVisible(true);
     }
 
     private JButton titleButton(String text, int color) {
