@@ -48,6 +48,7 @@ import javax.swing.Timer;
 
 public class OthelloGUI {
     private static final String AI_CLASS = "OthelloAI_final_48";
+    private static final int DEFAULT_AI_MOVE_TIME_MS = 3_000;
     private static final Color BACKGROUND = new Color(0x153b33);
     private static final Color BOARD_GREEN = new Color(0x16866d);
     private static final Color GRID_COLOR = new Color(0x103a30);
@@ -551,10 +552,12 @@ public class OthelloGUI {
                     throw new IOException("Compile original_final_48/" + AI_CLASS + ".java before starting the GUI.");
                 }
             }
-            process = new ProcessBuilder(javaCommand, "-Dothello.reportSearchBudget=true",
+            ProcessBuilder builder = new ProcessBuilder(javaCommand, "-Dothello.reportSearchBudget=true",
                     "-cp", engineClassPath.toString(), AI_CLASS)
-                    .directory(engineDirectory.toFile())
-                    .start();
+                    .directory(engineDirectory.toFile());
+            builder.environment().compute("OTHELLO_MOVE_TIME_MS", (name, configured) ->
+                    configured == null || configured.isBlank() ? Integer.toString(DEFAULT_AI_MOVE_TIME_MS) : configured);
+            process = builder.start();
             output = new BufferedReader(new InputStreamReader(process.getInputStream()));
             input = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
             errorReader = new Thread(this::readErrors, "othello-ai-stderr");
