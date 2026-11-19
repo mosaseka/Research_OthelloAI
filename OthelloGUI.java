@@ -2,6 +2,7 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GradientPaint;
@@ -28,6 +29,7 @@ import java.util.ArrayDeque;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.DoubleConsumer;
 import java.util.function.LongConsumer;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -59,13 +61,16 @@ public class OthelloGUI {
     private final JFrame frame = new JFrame("オセロ - " + AI_CLASS);
     private final CardLayout pages = new CardLayout();
     private final JPanel content = new JPanel(pages);
+    private final JPanel header = new JPanel(new BorderLayout());
     private final BoardPanel boardPanel = new BoardPanel();
     private final JLabel playerLabel = label("", 17, IVORY);
     private final JLabel stoneLabel = label("", 28, IVORY);
     private final JLabel turnLabel = label("", 17, IVORY);
     private final JLabel statusDetailLabel = label(" ", 16, IVORY);
     private final JLabel valueLabel = label("", 17, IVORY);
-    private final JButton restartButton = new JButton();
+    private final JLabel resultWinner = label("", 60, IVORY);
+    private final JLabel resultScore = label("", 27, IVORY);
+    private final JLabel resultCountdownLabel = label("", 21, IVORY);
     private final JButton fullScreenButton = new JButton("全画面表示");
     private final JButton aiErrorButton = new JButton("エラーの詳細");
     private String aiErrorDetails;
@@ -82,9 +87,9 @@ public class OthelloGUI {
     private void show() {
         content.add(createTitlePanel(), "title");
         content.add(createGamePanel(), "game");
+        content.add(createResultPanel(), "result");
         fullScreenButton.setToolTipText("F11 で切り替え、Esc で解除");
         fullScreenButton.addActionListener(e -> toggleFullScreen());
-        JPanel header = new JPanel(new BorderLayout());
         header.setBackground(BACKGROUND);
         header.setBorder(BorderFactory.createEmptyBorder(12, 18, 0, 18));
         header.add(fullScreenButton, BorderLayout.LINE_END);
@@ -141,17 +146,6 @@ public class OthelloGUI {
     }
 
     private JPanel createTitlePanel() {
-        JPanel page = new JPanel(new GridBagLayout()) {
-            @Override
-            protected void paintComponent(Graphics graphics) {
-                super.paintComponent(graphics);
-                Graphics2D g = (Graphics2D) graphics.create();
-                g.setPaint(new GradientPaint(0, 0, BACKGROUND, getWidth(), getHeight(), new Color(0x25483a)));
-                g.fillRect(0, 0, getWidth(), getHeight());
-                g.dispose();
-            }
-        };
-
         JLabel title = label("オセロ", 58, IVORY);
         title.setFont(new Font(Font.SERIF, Font.BOLD, 58));
         JLabel opponent = label("対戦相手　" + AI_CLASS, 15, new Color(0xc9d7c6));
@@ -163,7 +157,8 @@ public class OthelloGUI {
         JPanel hero = new JPanel(new BorderLayout(42, 0));
         hero.setOpaque(false);
         hero.add(heading, BorderLayout.CENTER);
-        hero.add(openingDiagram(), BorderLayout.EAST);
+        JPanel diagram = openingDiagram();
+        hero.add(diagram, BorderLayout.EAST);
 
         JPanel guide = new JPanel(new GridLayout(1, 3, 18, 0));
         guide.setOpaque(false);
@@ -174,23 +169,101 @@ public class OthelloGUI {
         guideTitle.setFont(guideTitle.getFont().deriveFont(Font.BOLD));
         JPanel instructions = new JPanel(new BorderLayout(0, 8));
         instructions.setBackground(IVORY);
-        instructions.setBorder(BorderFactory.createEmptyBorder(14, 18, 14, 18));
         instructions.add(guideTitle, BorderLayout.NORTH);
         instructions.add(guide, BorderLayout.CENTER);
 
         JPanel layout = column(hero, Box.createVerticalStrut(24), instructions);
-        layout.setPreferredSize(new Dimension(650, layout.getPreferredSize().height));
+        return responsivePage(layout, 650, scale -> {
+            int diagramSize = (int) Math.round(188 * scale);
+            diagram.setPreferredSize(new Dimension(diagramSize, diagramSize));
+            int verticalPadding = (int) Math.round(14 * scale);
+            int horizontalPadding = (int) Math.round(18 * scale);
+            instructions.setBorder(BorderFactory.createEmptyBorder(
+                    verticalPadding, horizontalPadding, verticalPadding, horizontalPadding));
+        });
+    }
+
+    private JButton titleButton(String text, int color) {
+        JButton button = pageButton(text, color == Othello.BLACK);
+        button.addActionListener(e -> startGame(color));
+        return button;
+    }
+
+    private static JButton pageButton(String text, boolean primary) {
+        JButton button = new JButton(text);
+        button.setMargin(new Insets(10, 14, 10, 14));
+        button.setBackground(primary ? IVORY : new Color(0x31574b));
+        button.setForeground(primary ? BACKGROUND : IVORY);
+        return button;
+    }
+
+    private JPanel createResultPanel() {
+        JLabel title = label("最終結果", 20, new Color(0xc9d7c6));
+        resultWinner.setFont(new Font(Font.SERIF, Font.BOLD, 60));
+        JButton replay = pageButton("再戦", true);
+        replay.addActionListener(e -> startGame(1 - aiPlayer));
+        JButton titleButton = pageButton("タイトルへ", false);
+        titleButton.addActionListener(e -> showTitle());
+        JPanel actions = new JPanel(new GridLayout(1, 2, 12, 0));
+        actions.setOpaque(false);
+        actions.add(replay);
+        actions.add(titleButton);
+        JPanel layout = column(title, Box.createVerticalStrut(12), resultWinner, Box.createVerticalStrut(8),
+                resultScore, Box.createVerticalStrut(24), resultCountdownLabel,
+                Box.createVerticalStrut(24), actions);
+        for (Component child : layout.getComponents()) {
+            if (child instanceof JComponent component) {
+                component.setAlignmentX(Component.CENTER_ALIGNMENT);
+            }
+        }
+        return responsivePage(layout, 540, scale -> {});
+    }
+
+    private static JPanel responsivePage(JPanel layout, int baseWidth, DoubleConsumer resizeArtwork) {
+        JPanel page = new JPanel(new GridBagLayout()) {
+            private double appliedScale;
+
+            @Override
+            public void doLayout() {
+                double scale = Math.min(getWidth() / 850.0, getHeight() / 480.0);
+                if (scale > 0 && Math.abs(scale - appliedScale) >= 0.01) {
+                    appliedScale = scale;
+                    scaleText(layout, scale);
+                    resizeArtwork.accept(scale);
+                    layout.setPreferredSize(null);
+                    layout.setPreferredSize(new Dimension((int) Math.round(baseWidth * scale),
+                            layout.getPreferredSize().height));
+                }
+                super.doLayout();
+            }
+
+            @Override
+            protected void paintComponent(Graphics graphics) {
+                super.paintComponent(graphics);
+                Graphics2D g = (Graphics2D) graphics.create();
+                g.setPaint(new GradientPaint(0, 0, BACKGROUND, getWidth(), getHeight(), new Color(0x25483a)));
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.dispose();
+            }
+        };
         page.add(layout);
         return page;
     }
 
-    private JButton titleButton(String text, int color) {
-        JButton button = new JButton(text);
-        button.setMargin(new Insets(10, 14, 10, 14));
-        button.setBackground(color == Othello.BLACK ? IVORY : new Color(0x31574b));
-        button.setForeground(color == Othello.BLACK ? BACKGROUND : IVORY);
-        button.addActionListener(e -> startGame(color));
-        return button;
+    private static void scaleText(Component component, double scale) {
+        if (component instanceof JLabel || component instanceof JButton || component instanceof JTextArea) {
+            JComponent control = (JComponent) component;
+            Font base = (Font) control.getClientProperty("baseFont");
+            if (base == null) {
+                base = control.getFont();
+                control.putClientProperty("baseFont", base);
+            }
+            control.setFont(base.deriveFont((float) (base.getSize2D() * scale)));
+        } else if (component instanceof Container container) {
+            for (Component child : container.getComponents()) {
+                scaleText(child, scale);
+            }
+        }
     }
 
     private JPanel guideColumn(String heading, String description) {
@@ -228,6 +301,7 @@ public class OthelloGUI {
     }
 
     private JPanel createGamePanel() {
+        JButton restartButton = new JButton("最初から");
         restartButton.addActionListener(e -> startGame(1 - aiPlayer));
         JButton titleButton = new JButton("タイトルへ");
         titleButton.addActionListener(e -> showTitle());
@@ -284,7 +358,12 @@ public class OthelloGUI {
     private void showTitle() {
         cancelResultReturn();
         stopAI();
-        pages.show(content, "title");
+        showPage("title");
+    }
+
+    private void showPage(String page) {
+        header.setVisible(!page.equals("result"));
+        pages.show(content, page);
     }
 
     private void startGame(int humanPlayer) {
@@ -295,9 +374,8 @@ public class OthelloGUI {
         othello = new Othello();
         othello.checkLegal();
         playerLabel.setText(humanPlayer == Othello.BLACK ? "あなたは黒（先手）" : "あなたは白（後手）");
-        restartButton.setText("最初から");
         valueLabel.setText("終局の予想石差（AI視点）  —");
-        pages.show(content, "game");
+        showPage("game");
 
         try {
             ai = new AiConnection(aiPlayer);
@@ -439,14 +517,11 @@ public class OthelloGUI {
     private void showResult() {
         stopAI();
         int difference = othello.nStones[1 - aiPlayer] - othello.nStones[aiPlayer];
-        String result = "引き分け";
-        if (difference != 0) {
-            String winner = difference > 0 ? "あなたの勝ち" : "AIの勝ち";
-            result = winner + "（" + Math.abs(difference) + "石差）";
-        }
-        turnLabel.setText("最終結果　" + result);
-        restartButton.setText("再戦");
-        statusDetailLabel.setText(RESULT_DISPLAY_SECONDS + "秒後にタイトルへ戻ります");
+        resultWinner.setText(difference == 0 ? "引き分け" : difference > 0 ? "あなたの勝ち" : "AIの勝ち");
+        String score = "黒 " + othello.nStones[Othello.BLACK] + "　・　白 " + othello.nStones[Othello.WHITE];
+        resultScore.setText(difference == 0 ? score : score + "（" + Math.abs(difference) + "石差）");
+        resultCountdownLabel.setText(RESULT_DISPLAY_SECONDS + "秒後にタイトルへ戻ります");
+        showPage("result");
 
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(RESULT_DISPLAY_SECONDS);
         resultReturnTimer = new Timer(200, e -> {
@@ -455,7 +530,7 @@ public class OthelloGUI {
                 showTitle();
             } else {
                 int seconds = (int) Math.ceil(remaining / 1_000_000_000.0);
-                statusDetailLabel.setText(seconds + "秒後にタイトルへ戻ります");
+                resultCountdownLabel.setText(seconds + "秒後にタイトルへ戻ります");
             }
         });
         resultReturnTimer.start();
